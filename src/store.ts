@@ -1,0 +1,35 @@
+/**
+ * Store re-exports from db (SQLite, persisted to server file).
+ * All state and mutations go through the SQLite backend.
+ */
+export type { User, UserRow } from './db'
+export {
+  init,
+  getState,
+  subscribe,
+  exportDatabase,
+  loadDatabaseFromBuffer,
+  getCurrentUser,
+  setCurrentUserId,
+  setDefaultBranchPersonId,
+  login,
+  createUserByAdmin,
+  getUsers,
+  updateUserByAdmin,
+  deleteUserByAdmin,
+  logout,
+  addPerson,
+  importPerson,
+  updatePerson,
+  deletePerson,
+  addParentChild,
+  addSpouse,
+  removeRelationship,
+  getPerson,
+  getChildrenIds,
+  getParentIds,
+  getSpouseId,
+  getParentRelationships,
+  getChildRelationships,
+  getSpouseRelationship,
+} from './db'
