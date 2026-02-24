@@ -202,10 +202,10 @@ Easiest way to get FamiTree on the internet without managing a server: connect y
 3. **Build**: Railway will detect the `Dockerfile` and build the image. If it doesn’t, set **Build Command** to `docker build -t famitree .` or leave empty and ensure the Dockerfile is in the repo root.
 4. **Start command**: Set **Start Command** to `node server.js` (or leave empty if the Dockerfile `CMD` is used).
 5. **Port**: Set **PORT** in Variables to `3000`, or leave default; Railway usually auto-detects.
-6. **Persistent volume** (important for the DB):
+6. **Persistent volume** (important for the DB — without this, data is lost on every redeploy):
    - In your service → **Variables** / **Settings** → **Volumes** (or “Add volume”).
-   - Mount path: `/app/data`.
-   - This keeps the SQLite file across redeploys.
+   - **Create a volume**: On the project canvas, press **⌘K** / **Ctrl+K** → type **volume** → **Create volume**. Or right-click the canvas → create volume.
+   - When prompted, **select your FamiTree service** and set the **mount path** to **`/app/data`**.
 7. **Deploy**: Push to your main branch or trigger a deploy. Railway will give you a URL like `https://your-app.up.railway.app`.
 
 ### Render
