@@ -24,6 +24,10 @@ let initPromise: Promise<void> | null = null
 /** True when GET /api/db returned 404 or 200 with SQLite (our server). Avoids POST 404 when using Vite dev. */
 let serverHasDbApi = false
 
+export function hasServerDbApi(): boolean {
+  return serverHasDbApi
+}
+
 export interface User {
   id: string
   username: string
@@ -180,17 +184,17 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
   return { people, relationships }
 }
 
-/** Persist in-memory DB: always save to file (POST /api/db). */
-function persistDb(): void {
-  if (!db) return
-  if (!serverHasDbApi || typeof fetch === 'undefined') return
+/** Persist in-memory DB: save to file (POST /api/db). Returns a promise so callers can await. */
+function persistDb(): Promise<void> {
+  if (!db) return Promise.resolve()
+  if (!serverHasDbApi || typeof fetch === 'undefined') return Promise.resolve()
   const data = db.export()
-  fetch('/api/db', {
+  return fetch('/api/db', {
     method: 'POST',
     body: new Blob([new Uint8Array(data)]),
     headers: { 'Content-Type': 'application/octet-stream' },
-  }).catch((error) => {
-    console.error("Failed to persist DB", error);
+  }).then(() => undefined).catch((error) => {
+    console.error("Failed to persist DB", error)
   })
 }
 
@@ -200,8 +204,11 @@ export function exportDatabase(): Uint8Array | null {
   return db.export()
 }
 
-/** Replace the in-memory database with the given SQLite file. Call after init(). Logs out and reloads state. */
+/** Replace the in-memory database with the given SQLite file. Call after init(). Logs out, persists to server if available, then reloads state. */
 export async function loadDatabaseFromBuffer(buffer: ArrayBuffer): Promise<void> {
+  if (!isValidSqliteBuffer(buffer)) {
+    throw new Error('Invalid SQLite file. The file may be corrupted or not a SQLite database.')
+  }
   const SQL = await initSqlJs({ locateFile: () => wasmUrl })
   if (db) {
     db.close()
@@ -214,6 +221,7 @@ export async function loadDatabaseFromBuffer(buffer: ArrayBuffer): Promise<void>
   if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(SESSION_KEY)
   state = loadStateFromDb(db, null)
   emit()
+  await persistDb()
 }
 
 async function hashPassword(password: string): Promise<string> {
