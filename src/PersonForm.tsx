@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   addPerson,
   updatePerson,
   deletePerson,
   addParentChild,
+  addParentChildInLaw,
+  addParentChildAdopt,
   addSpouse,
   removeRelationship,
   getState,
   getParentIds,
   getChildrenIds,
-  getSpouseId,
+  getSpouseIds,
+  getSpouseRelationships,
   getParentRelationships,
   getChildRelationships,
-  getSpouseRelationship,
 } from './store'
 import type { Person } from './types'
 import { Avatar } from './Avatar'
@@ -33,6 +35,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
   const [name, setName] = useState(person?.name ?? '')
   const [title, setTitle] = useState(person?.title ?? '')
   const [address, setAddress] = useState(person?.address ?? '')
+  const [birthPlace, setBirthPlace] = useState(person?.birthPlace ?? '')
+  const [buriedAt, setBuriedAt] = useState(person?.buriedAt ?? '')
   const [birthDate, setBirthDate] = useState(person?.birthDate ?? '')
   const [deathDate, setDeathDate] = useState(person?.deathDate ?? '')
   const [birthDateInput, setBirthDateInput] = useState(person?.birthDate ? formatDateDisplay(person.birthDate) : '')
@@ -42,12 +46,15 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
   /** string = data URL, null = user removed, undefined = use person's current */
   const [avatar, setAvatar] = useState<string | null | undefined>(person?.avatar ?? undefined)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (person) {
       setName(person.name)
       setTitle(person.title ?? '')
       setAddress(person.address ?? '')
+      setBirthPlace(person.birthPlace ?? '')
+      setBuriedAt(person.buriedAt ?? '')
       setBirthDate(person.birthDate ?? '')
       setDeathDate(person.deathDate ?? '')
       setBirthDateInput(person.birthDate ? formatDateDisplay(person.birthDate) : '')
@@ -62,19 +69,22 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
     e.preventDefault()
     setSubmitError(null)
     if (name.trim() == "") return setSubmitError("Name is required")
-    const birthIso = parseDateInput(birthDateInput) || birthDate
-    const deathIso = parseDateInput(deathDateInput) || deathDate
+    const birthIso = !birthDateInput.trim() ? undefined : (parseDateInput(birthDateInput) || birthDateInput.trim() || birthDate)
+    const deathIso = !deathDateInput.trim() ? undefined : (parseDateInput(deathDateInput) || deathDateInput.trim() || deathDate)
     try {
       if (isNew) {
         addPerson({
           name: name.trim(),
           title: title.trim() || undefined,
           address: address.trim() || undefined,
+          birthPlace: birthPlace.trim() || undefined,
+          buriedAt: buriedAt.trim() || undefined,
           birthDate: birthIso || undefined,
           deathDate: deathIso || undefined,
           gender,
           notes: notes.trim() || undefined,
           avatar: avatar || undefined,
+          memberRole: 'main',
         })
         onSaved()
       } else {
@@ -82,6 +92,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
           name: name.trim(),
           title: title.trim() || undefined,
           address: address.trim() || undefined,
+          birthPlace: birthPlace.trim() || undefined,
+          buriedAt: buriedAt.trim() || undefined,
           birthDate: birthIso || undefined,
           deathDate: deathIso || undefined,
           gender,
@@ -117,10 +129,14 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
   const others = state.people.filter((p) => p.id !== person?.id)
   const parentIds = person ? getParentIds(person.id) : []
   const childIds = person ? getChildrenIds(person.id) : []
-  const spouseId = person ? getSpouseId(person.id) : undefined
+  const spouseIds = person ? getSpouseIds(person.id) : []
 
   const [addParentId, setAddParentId] = useState('')
   const [addChildId, setAddChildId] = useState('')
+  const [addParentInLawId, setAddParentInLawId] = useState('')
+  const [addParentAdoptId, setAddParentAdoptId] = useState('')
+  const [addChildInLawId, setAddChildInLawId] = useState('')
+  const [addChildAdoptId, setAddChildAdoptId] = useState('')
   const [addSpouseId, setAddSpouseId] = useState('')
 
   const addParent = () => {
@@ -137,6 +153,34 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
     }
   }
 
+  const addParentInLaw = () => {
+    if (person && addParentInLawId) {
+      addParentChildInLaw(addParentInLawId, person.id)
+      setAddParentInLawId('')
+    }
+  }
+
+  const addParentAdopt = () => {
+    if (person && addParentAdoptId) {
+      addParentChildAdopt(addParentAdoptId, person.id)
+      setAddParentAdoptId('')
+    }
+  }
+
+  const addChildInLaw = () => {
+    if (person && addChildInLawId) {
+      addParentChildInLaw(person.id, addChildInLawId)
+      setAddChildInLawId('')
+    }
+  }
+
+  const addChildAdopt = () => {
+    if (person && addChildAdoptId) {
+      addParentChildAdopt(person.id, addChildAdoptId)
+      setAddChildAdoptId('')
+    }
+  }
+
   const addSpouseRel = () => {
     if (person && addSpouseId) {
       addSpouse(person.id, addSpouseId)
@@ -144,11 +188,58 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
     }
   }
 
+  const parentRelLabel = (type: 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt') =>
+    type === 'parent-child' ? t('form.parent') : type === 'parent-child-in-law' ? t('form.parentInLaw') : t('form.parentAdopt')
+  const childRelLabel = (type: 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt') =>
+    type === 'parent-child' ? t('form.child') : type === 'parent-child-in-law' ? t('form.childInLaw') : t('form.childAdopt')
+
+  const formTitle = isNew ? t('form.addPerson') : t('form.editPerson')
+
   return (
     <div className="person-form">
-      <h2 id="person-form-title" className="form-title">{isNew ? t('form.addPerson') : t('form.editPerson')}</h2>
+      <h2 id="person-form-title" className="form-title">{formTitle}</h2>
       <form onSubmit={handleSubmit}>
         <div className="person-form-grid">
+          <div className="form-group form-group--avatar">
+            <div className="avatar-upload">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="avatar-input"
+                aria-hidden
+              />
+              <div
+                className="avatar-preview avatar-preview--clickable"
+                onClick={() => avatarInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); avatarInputRef.current?.click() } }}
+                aria-label={(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.changePhoto') : t('form.uploadPhoto')}
+              >
+                <Avatar
+                  name={name}
+                  avatar={(avatar !== undefined && avatar !== null ? avatar : person?.avatar) ?? undefined}
+                  gender={gender}
+                  className="avatar-preview-img"
+                />
+                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? (
+                  <button
+                    type="button"
+                    className="btn secondary avatar-remove"
+                    onClick={(e) => { e.stopPropagation(); removeAvatar() }}
+                  >
+                    {t('form.removePhoto')}
+                  </button>
+                ) : null}
+              </div>
+              <span className="avatar-hint">
+                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.clickToChangePhoto') : t('form.clickToUploadPhoto')}
+              </span>
+            </div>
+          </div>
+          {/* Left column: Name, Gender, Birth date, Birth place */}
           <div className="form-group">
             <label htmlFor="name">{t('form.name')}</label>
             <input
@@ -159,7 +250,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group form-group--right">
             <label htmlFor="title">{t('form.title')}</label>
             <input
               id="title"
@@ -182,45 +273,12 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               <option value="female">{t('gender.female')}</option>
             </select>
           </div>
-          <div className="form-group">
-            <label htmlFor="address">{t('form.address')}</label>
-            <input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t('form.address')}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="birth">{t('form.birthDate')}</label>
-            <input
-              id="birth"
-              type="text"
-              inputMode="numeric"
-              placeholder="dd/MM/yyyy"
-              value={birthDateInput}
-              onChange={(e) => {
-                const v = e.target.value
-                setBirthDateInput(v)
-                if (!v.trim()) setBirthDate('')
-                else {
-                  const parsed = parseDateInput(v)
-                  if (parsed) setBirthDate(parsed)
-                }
-              }}
-              onBlur={() => {
-                const parsed = parseDateInput(birthDateInput)
-                if (parsed) setBirthDateInput(formatDateDisplay(parsed))
-              }}
-            />
-          </div>
-          <div className="form-group">
+          <div className="form-group form-group--right">
             <label htmlFor="death">{t('form.deathDate')}</label>
             <input
               id="death"
               type="text"
-              inputMode="numeric"
-              placeholder="dd/MM/yyyy"
+              placeholder={t('form.deathDatePlaceholder')}
               value={deathDateInput}
               onChange={(e) => {
                 const v = e.target.value
@@ -237,6 +295,57 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               }}
             />
           </div>
+          <div className="form-group">
+            <label htmlFor="birth">{t('form.birthDate')}</label>
+            <input
+              id="birth"
+              type="text"
+              placeholder={t('form.datePlaceholder')}
+              value={birthDateInput}
+              onChange={(e) => {
+                const v = e.target.value
+                setBirthDateInput(v)
+                if (!v.trim()) setBirthDate('')
+                else {
+                  const parsed = parseDateInput(v)
+                  if (parsed) setBirthDate(parsed)
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseDateInput(birthDateInput)
+                if (parsed) setBirthDateInput(formatDateDisplay(parsed))
+              }}
+            />
+          </div>
+          <div className="form-group form-group--right">
+            <label htmlFor="buriedAt">{t('form.buriedAt')}</label>
+            <input
+              id="buriedAt"
+              value={buriedAt}
+              onChange={(e) => setBuriedAt(e.target.value)}
+              placeholder={t('form.buriedAtPlaceholder')}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="birthPlace">{t('form.birthPlace')}</label>
+            <input
+              id="birthPlace"
+              type="text"
+              value={birthPlace}
+              onChange={(e) => setBirthPlace(e.target.value)}
+              placeholder={t('form.birthPlacePlaceholder')}
+            />
+          </div>
+          <div className="form-group form-group--right">
+            <label htmlFor="address">{t('form.address')}</label>
+            <input
+              id="address"
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t('form.address')}
+            />
+          </div>
           <div className="form-group form-group--notes">
             <label htmlFor="notes">{t('form.notes')}</label>
             <textarea
@@ -247,37 +356,6 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               placeholder={t('form.optionalNotes')}
               rows={3}
             />
-          </div>
-          <div className="form-group form-group--avatar">
-            <label>{t('form.avatar')}</label>
-            <div className="avatar-upload">
-              <div className="avatar-preview">
-                <Avatar
-                  name={name}
-                  avatar={(avatar !== undefined && avatar !== null ? avatar : person?.avatar) ?? undefined}
-                  gender={gender}
-                  className="avatar-preview-img"
-                />
-                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? (
-                  <button
-                    type="button"
-                    className="btn secondary avatar-remove"
-                    onClick={removeAvatar}
-                  >
-                    {t('form.removePhoto')}
-                  </button>
-                ) : null}
-              </div>
-              <label className="btn secondary avatar-label">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="avatar-input"
-                />
-                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.changePhoto') : t('form.uploadPhoto')}
-              </label>
-            </div>
           </div>
         </div>
         {submitError && (
@@ -308,39 +386,46 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
         <>
           <p className="section-title">{t('form.relationships')}</p>
           <div className="rel-current">
-            {getParentRelationships(person.id).map(({ id, person: p }) => (
+            {getParentRelationships(person.id).map(({ id, person: p, type }) => (
               <div key={id} className="rel-item">
-                <span className="rel-label">{t('form.parent')}</span>
+                <span className="rel-label">{parentRelLabel(type)}</span>
                 <span className="rel-name">{p.name}</span>
                 <button type="button" className="btn danger rel-remove" onClick={() => removeRelationship(id)} title={t('form.removeRelationship')}>
                   {t('form.remove')}
                 </button>
               </div>
             ))}
-            {getChildRelationships(person.id).map(({ id, person: p }) => (
+            {getChildRelationships(person.id).map(({ id, person: p, type }) => (
               <div key={id} className="rel-item">
-                <span className="rel-label">{t('form.child')}</span>
+                <span className="rel-label">{childRelLabel(type)}</span>
                 <span className="rel-name">{p.name}</span>
                 <button type="button" className="btn danger rel-remove" onClick={() => removeRelationship(id)} title={t('form.removeRelationship')}>
                   {t('form.remove')}
                 </button>
               </div>
             ))}
-            {getSpouseRelationship(person.id) && (() => {
-              const rel = getSpouseRelationship(person.id)!
+            {getSpouseRelationships(person.id).map((rel) => {
+              const spouseLabel =
+                rel.person.memberRole === 'daughter-in-law'
+                  ? t('form.daughterInLaw')
+                  : rel.person.memberRole === 'son-in-law'
+                    ? t('form.sonInLaw')
+                    : rel.index > 1
+                      ? t('form.spouseN', { n: rel.index })
+                      : t('form.spouse')
               return (
                 <div key={rel.id} className="rel-item">
-                  <span className="rel-label">{t('form.spouse')}</span>
+                  <span className="rel-label">{spouseLabel}</span>
                   <span className="rel-name">{rel.person.name}</span>
                   <button type="button" className="btn danger rel-remove" onClick={() => removeRelationship(rel.id)} title={t('form.removeRelationship')}>
                     {t('form.remove')}
                   </button>
                 </div>
               )
-            })()}
+            })}
             {getParentRelationships(person.id).length === 0 &&
               getChildRelationships(person.id).length === 0 &&
-              !getSpouseRelationship(person.id) && (
+              getSpouseRelationships(person.id).length === 0 && (
                 <p className="rel-none">{t('form.noRelationships')}</p>
               )}
           </div>
@@ -370,6 +455,27 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                     </button>
                   </div>
                   <div className="rel-actions-col">
+                    <label>{t('form.addSpouse')}</label>
+                    <SearchablePersonSelect
+                      id="add-spouse-select"
+                      options={others.filter((o) => !spouseIds.includes(o.id))}
+                      value={addSpouseId}
+                      onChange={setAddSpouseId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addSpouseRel}
+                      disabled={!addSpouseId}
+                    >
+                      {t('form.addAsSpouse')}
+                    </button>
+                  </div>
+                  <div className="rel-actions-col">
                     <label>{t('form.addChild')}</label>
                     <SearchablePersonSelect
                       id="add-child-select"
@@ -390,26 +496,91 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       {t('form.addAsChild')}
                     </button>
                   </div>
+                  <div className="rel-actions-col">
+                    <label>{t('form.addParentInLaw')}</label>
+                    <SearchablePersonSelect
+                      id="add-parent-inlaw-select"
+                      options={others.filter((o) => !parentIds.includes(o.id))}
+                      value={addParentInLawId}
+                      onChange={setAddParentInLawId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addParentInLaw}
+                      disabled={!addParentInLawId}
+                    >
+                      {t('form.addAsParentInLaw')}
+                    </button>
+                  </div>
+                  <div className="rel-actions-col">
+                    <label>{t('form.addChildInLaw')}</label>
+                    <SearchablePersonSelect
+                      id="add-child-inlaw-select"
+                      options={others.filter((o) => !childIds.includes(o.id))}
+                      value={addChildInLawId}
+                      onChange={setAddChildInLawId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addChildInLaw}
+                      disabled={!addChildInLawId}
+                    >
+                      {t('form.addAsChildInLaw')}
+                    </button>
+                  </div>                  
+                  <div className="rel-actions-col">
+                    <label>{t('form.addParentAdopt')}</label>
+                    <SearchablePersonSelect
+                      id="add-parent-adopt-select"
+                      options={others.filter((o) => !parentIds.includes(o.id))}
+                      value={addParentAdoptId}
+                      onChange={setAddParentAdoptId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addParentAdopt}
+                      disabled={!addParentAdoptId}
+                    >
+                      {t('form.addAsParentAdopt')}
+                    </button>
+                  </div>
+                  <div className="rel-actions-col">
+                    <label>{t('form.addChildAdopt')}</label>
+                    <SearchablePersonSelect
+                      id="add-child-adopt-select"
+                      options={others.filter((o) => !childIds.includes(o.id))}
+                      value={addChildAdoptId}
+                      onChange={setAddChildAdoptId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addChildAdopt}
+                      disabled={!addChildAdoptId}
+                    >
+                      {t('form.addAsChildAdopt')}
+                    </button>
+                  </div>
                 </div>
-                <label>{t('form.addSpouse')}</label>
-                <SearchablePersonSelect
-                  id="add-spouse-select"
-                  options={others.filter((o) => o.id !== spouseId)}
-                  value={addSpouseId}
-                  onChange={setAddSpouseId}
-                  placeholder={t('form.selectPerson')}
-                  searchPlaceholder={t('form.searchPerson')}
-                  emptyLabel={t('form.noOptions')}
-                  noMatchesLabel={t('form.noMatches')}
-                />
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={addSpouseRel}
-                  disabled={!addSpouseId}
-                >
-                  {t('form.addAsSpouse')}
-                </button>
               </>
             )}
           </div>
