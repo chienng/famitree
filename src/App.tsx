@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { getState, subscribe, getUsers, getPerson, getChildrenIds, updateUserByAdmin, deleteUserByAdmin, importPerson, exportDatabase, loadDatabaseFromBuffer } from './store'
+import { getState, subscribe, getUsers, getPerson, getChildrenIds, updateUserByAdmin, deleteUserByAdmin, importPerson, exportDatabase, loadDatabaseFromBuffer, hasServerDbApi } from './store'
 import type { UserRow } from './store'
 import { buildTree, buildTreeRootedAt, filterTreeByQuery, getMainPersonIds, getBranchPersonIds } from './treeUtils'
 import { TreeView } from './TreeView'
@@ -308,6 +308,29 @@ export default function App() {
             {t('nav.list')}
           </button>
           <div className="header-user-menu" ref={userMenuRef}>
+            {isAdmin && (
+              <input
+                ref={restoreDbInputRef}
+                type="file"
+                accept=".sqlite,.db,application/x-sqlite3,application/vnd.sqlite3"
+                className="hidden-input"
+                aria-label={t('auth.restoreDatabase')}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file) return
+                  if (!confirm(t('auth.restoreDatabaseConfirm'))) return
+                  try {
+                    const buffer = await file.arrayBuffer()
+                    await loadDatabaseFromBuffer(buffer)
+                    if (hasServerDbApi()) window.location.reload()
+                  } catch (err) {
+                    const message = err instanceof Error ? err.message : String(err)
+                    alert(message)
+                  }
+                }}
+              />
+            )}
             <button
               type="button"
               className={userMenuOpen ? 'active' : ''}
@@ -423,7 +446,7 @@ export default function App() {
                         if (!confirm(t('auth.saveDatabaseConfirm'))) return
                         const data = exportDatabase()
                         if (data) {
-                          const blob = new Blob([data], { type: 'application/vnd.sqlite3' })
+                          const blob = new Blob([data as BlobPart], { type: 'application/vnd.sqlite3' })
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement('a')
                           a.href = url
@@ -444,33 +467,13 @@ export default function App() {
                     </button>
                   )}
                   {isAdmin && (
-                    <>
-                      <input
-                        ref={restoreDbInputRef}
-                        type="file"
-                        accept=".sqlite,.db,application/x-sqlite3,application/vnd.sqlite3"
-                        className="hidden-input"
-                        aria-label={t('auth.restoreDatabase')}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          e.target.value = ''
-                          if (!file || !confirm(t('auth.restoreDatabaseConfirm'))) return
-                          try {
-                            const buffer = await file.arrayBuffer()
-                            await loadDatabaseFromBuffer(buffer)
-                            window.location.reload()
-                          } catch (_) {
-                            // ignore
-                          }
-                        }}
-                      />
-                      <button
+                    <button
                         type="button"
                         className="header-user-item"
                         role="menuitem"
                         onClick={() => {
                           setUserMenuOpen(false)
-                          if (confirm(t('auth.restoreDatabaseConfirm'))) restoreDbInputRef.current?.click()
+                          restoreDbInputRef.current?.click()
                         }}
                       >
                         <span className="header-user-item-icon" aria-hidden>
@@ -482,7 +485,6 @@ export default function App() {
                         </span>
                         {t('auth.restoreDatabase')}
                       </button>
-                    </>
                   )}
                   {isAdmin && (
                     <button

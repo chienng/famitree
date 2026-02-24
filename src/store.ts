@@ -9,6 +9,7 @@ export {
   subscribe,
   exportDatabase,
   loadDatabaseFromBuffer,
+  hasServerDbApi,
   getCurrentUser,
   setCurrentUserId,
   setDefaultBranchPersonId,
