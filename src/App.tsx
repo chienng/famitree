@@ -748,7 +748,7 @@ export default function App() {
                         const result = await updateUserByAdmin(row.id, {
                           username: isEditingSelf ? undefined : (editUsername.trim() || undefined),
                           password: editPassword || undefined,
-                          defaultBranchPersonId: editBranchId ?? undefined,
+                          defaultBranchPersonId: editBranchId,
                         })
                         if (result.error) {
                           setEditError(result.error.startsWith('auth.') ? t(result.error) : result.error)
