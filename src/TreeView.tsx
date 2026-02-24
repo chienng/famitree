@@ -4,20 +4,11 @@ import { createPortal } from 'react-dom'
 import type { TreeNode } from './types'
 import type { Person } from './types'
 import { Avatar } from './Avatar'
-import { formatDateDisplay } from './dateUtils'
+import { formatDateDisplay, getCurrentAge } from './dateUtils'
 
-/** Compute age from birth date; if death date given, age at death, else age today. */
+/** Compute age (uses same logic as dateUtils for partial dates). */
 function getAge(birthDate?: string, deathDate?: string): number | null {
-  if (!birthDate) return null
-  const birth = new Date(birthDate)
-  if (Number.isNaN(birth.getTime())) return null
-  const end = deathDate ? new Date(deathDate) : new Date()
-  if (Number.isNaN(end.getTime())) return null
-  let age = end.getFullYear() - birth.getFullYear()
-  const monthDiff = end.getMonth() - birth.getMonth()
-  const dayDiff = end.getDate() - birth.getDate()
-  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age -= 1
-  return age < 0 ? null : age
+  return getCurrentAge(birthDate, deathDate)
 }
 
 /** Format date line for tree: always show age (years old) when birth date exists. */

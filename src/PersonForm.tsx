@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   addPerson,
   updatePerson,
@@ -33,6 +33,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
   const [name, setName] = useState(person?.name ?? '')
   const [title, setTitle] = useState(person?.title ?? '')
   const [address, setAddress] = useState(person?.address ?? '')
+  const [buriedAt, setBuriedAt] = useState(person?.buriedAt ?? '')
   const [birthDate, setBirthDate] = useState(person?.birthDate ?? '')
   const [deathDate, setDeathDate] = useState(person?.deathDate ?? '')
   const [birthDateInput, setBirthDateInput] = useState(person?.birthDate ? formatDateDisplay(person.birthDate) : '')
@@ -42,12 +43,14 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
   /** string = data URL, null = user removed, undefined = use person's current */
   const [avatar, setAvatar] = useState<string | null | undefined>(person?.avatar ?? undefined)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (person) {
       setName(person.name)
       setTitle(person.title ?? '')
       setAddress(person.address ?? '')
+      setBuriedAt(person.buriedAt ?? '')
       setBirthDate(person.birthDate ?? '')
       setDeathDate(person.deathDate ?? '')
       setBirthDateInput(person.birthDate ? formatDateDisplay(person.birthDate) : '')
@@ -62,14 +65,15 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
     e.preventDefault()
     setSubmitError(null)
     if (name.trim() == "") return setSubmitError("Name is required")
-    const birthIso = parseDateInput(birthDateInput) || birthDate
-    const deathIso = parseDateInput(deathDateInput) || deathDate
+    const birthIso = !birthDateInput.trim() ? undefined : (parseDateInput(birthDateInput) || birthDateInput.trim() || birthDate)
+    const deathIso = !deathDateInput.trim() ? undefined : (parseDateInput(deathDateInput) || deathDateInput.trim() || deathDate)
     try {
       if (isNew) {
         addPerson({
           name: name.trim(),
           title: title.trim() || undefined,
           address: address.trim() || undefined,
+          buriedAt: buriedAt.trim() || undefined,
           birthDate: birthIso || undefined,
           deathDate: deathIso || undefined,
           gender,
@@ -82,6 +86,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
           name: name.trim(),
           title: title.trim() || undefined,
           address: address.trim() || undefined,
+          buriedAt: buriedAt.trim() || undefined,
           birthDate: birthIso || undefined,
           deathDate: deathIso || undefined,
           gender,
@@ -149,6 +154,45 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
       <h2 id="person-form-title" className="form-title">{isNew ? t('form.addPerson') : t('form.editPerson')}</h2>
       <form onSubmit={handleSubmit}>
         <div className="person-form-grid">
+          <div className="form-group form-group--avatar">
+            <div className="avatar-upload">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="avatar-input"
+                aria-hidden
+              />
+              <div
+                className="avatar-preview avatar-preview--clickable"
+                onClick={() => avatarInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); avatarInputRef.current?.click() } }}
+                aria-label={(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.changePhoto') : t('form.uploadPhoto')}
+              >
+                <Avatar
+                  name={name}
+                  avatar={(avatar !== undefined && avatar !== null ? avatar : person?.avatar) ?? undefined}
+                  gender={gender}
+                  className="avatar-preview-img"
+                />
+                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? (
+                  <button
+                    type="button"
+                    className="btn secondary avatar-remove"
+                    onClick={(e) => { e.stopPropagation(); removeAvatar() }}
+                  >
+                    {t('form.removePhoto')}
+                  </button>
+                ) : null}
+              </div>
+              <span className="avatar-hint">
+                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.clickToChangePhoto') : t('form.clickToUploadPhoto')}
+              </span>
+            </div>
+          </div>
           <div className="form-group">
             <label htmlFor="name">{t('form.name')}</label>
             <input
@@ -183,12 +227,25 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
             </select>
           </div>
           <div className="form-group">
-            <label htmlFor="address">{t('form.address')}</label>
+            <label htmlFor="death">{t('form.deathDate')}</label>
             <input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder={t('form.address')}
+              id="death"
+              type="text"
+              placeholder={t('form.deathDatePlaceholder')}
+              value={deathDateInput}
+              onChange={(e) => {
+                const v = e.target.value
+                setDeathDateInput(v)
+                if (!v.trim()) setDeathDate('')
+                else {
+                  const parsed = parseDateInput(v)
+                  if (parsed) setDeathDate(parsed)
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseDateInput(deathDateInput)
+                if (parsed) setDeathDateInput(formatDateDisplay(parsed))
+              }}
             />
           </div>
           <div className="form-group">
@@ -196,8 +253,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
             <input
               id="birth"
               type="text"
-              inputMode="numeric"
-              placeholder="dd/MM/yyyy"
+              placeholder={t('form.datePlaceholder')}
               value={birthDateInput}
               onChange={(e) => {
                 const v = e.target.value
@@ -215,26 +271,21 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="death">{t('form.deathDate')}</label>
+            <label htmlFor="buriedAt">{t('form.buriedAt')}</label>
             <input
-              id="death"
-              type="text"
-              inputMode="numeric"
-              placeholder="dd/MM/yyyy"
-              value={deathDateInput}
-              onChange={(e) => {
-                const v = e.target.value
-                setDeathDateInput(v)
-                if (!v.trim()) setDeathDate('')
-                else {
-                  const parsed = parseDateInput(v)
-                  if (parsed) setDeathDate(parsed)
-                }
-              }}
-              onBlur={() => {
-                const parsed = parseDateInput(deathDateInput)
-                if (parsed) setDeathDateInput(formatDateDisplay(parsed))
-              }}
+              id="buriedAt"
+              value={buriedAt}
+              onChange={(e) => setBuriedAt(e.target.value)}
+              placeholder={t('form.buriedAtPlaceholder')}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="address">{t('form.address')}</label>
+            <input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder={t('form.address')}
             />
           </div>
           <div className="form-group form-group--notes">
@@ -247,37 +298,6 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               placeholder={t('form.optionalNotes')}
               rows={3}
             />
-          </div>
-          <div className="form-group form-group--avatar">
-            <label>{t('form.avatar')}</label>
-            <div className="avatar-upload">
-              <div className="avatar-preview">
-                <Avatar
-                  name={name}
-                  avatar={(avatar !== undefined && avatar !== null ? avatar : person?.avatar) ?? undefined}
-                  gender={gender}
-                  className="avatar-preview-img"
-                />
-                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? (
-                  <button
-                    type="button"
-                    className="btn secondary avatar-remove"
-                    onClick={removeAvatar}
-                  >
-                    {t('form.removePhoto')}
-                  </button>
-                ) : null}
-              </div>
-              <label className="btn secondary avatar-label">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="avatar-input"
-                />
-                {(avatar !== undefined && avatar !== null) || (person?.avatar && avatar !== null) ? t('form.changePhoto') : t('form.uploadPhoto')}
-              </label>
-            </div>
           </div>
         </div>
         {submitError && (
@@ -370,6 +390,27 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                     </button>
                   </div>
                   <div className="rel-actions-col">
+                    <label>{t('form.addSpouse')}</label>
+                    <SearchablePersonSelect
+                      id="add-spouse-select"
+                      options={others.filter((o) => o.id !== spouseId)}
+                      value={addSpouseId}
+                      onChange={setAddSpouseId}
+                      placeholder={t('form.selectPerson')}
+                      searchPlaceholder={t('form.searchPerson')}
+                      emptyLabel={t('form.noOptions')}
+                      noMatchesLabel={t('form.noMatches')}
+                    />
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={addSpouseRel}
+                      disabled={!addSpouseId}
+                    >
+                      {t('form.addAsSpouse')}
+                    </button>
+                  </div>
+                  <div className="rel-actions-col">
                     <label>{t('form.addChild')}</label>
                     <SearchablePersonSelect
                       id="add-child-select"
@@ -391,25 +432,6 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                     </button>
                   </div>
                 </div>
-                <label>{t('form.addSpouse')}</label>
-                <SearchablePersonSelect
-                  id="add-spouse-select"
-                  options={others.filter((o) => o.id !== spouseId)}
-                  value={addSpouseId}
-                  onChange={setAddSpouseId}
-                  placeholder={t('form.selectPerson')}
-                  searchPlaceholder={t('form.searchPerson')}
-                  emptyLabel={t('form.noOptions')}
-                  noMatchesLabel={t('form.noMatches')}
-                />
-                <button
-                  type="button"
-                  className="btn secondary"
-                  onClick={addSpouseRel}
-                  disabled={!addSpouseId}
-                >
-                  {t('form.addAsSpouse')}
-                </button>
               </>
             )}
           </div>

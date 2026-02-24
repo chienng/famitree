@@ -5,6 +5,8 @@ export interface Person {
   address?: string
   birthDate?: string
   deathDate?: string
+  /** Place of burial (e.g. cemetery name, location) */
+  buriedAt?: string
   gender?: 'male' | 'female' | 'other'
   notes?: string
   /** Data URL (e.g. base64 image) for profile photo */

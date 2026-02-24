@@ -112,6 +112,11 @@ function ensureUserColumns(dbInstance: Database): void {
     // column already exists
   }
   try {
+    dbInstance.run('ALTER TABLE people ADD COLUMN buried_at TEXT')
+  } catch {
+    // column already exists
+  }
+  try {
     dbInstance.run('ALTER TABLE users ADD COLUMN updated_at TEXT')
   } catch {
     // column already exists
@@ -146,7 +151,7 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
   if (!userId) return { people: [], relationships: [] }
   const people: Person[] = []
   const stmt = dbInstance.prepare(
-    'SELECT id, name, title, address, birth_date, death_date, gender, notes, avatar FROM people'
+    'SELECT id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at FROM people'
   )
   while (stmt.step()) {
     const row = stmt.getAsObject() as Record<string, string | undefined>
@@ -160,6 +165,7 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
       gender: (row.gender as Person['gender']) ?? undefined,
       notes: row.notes ?? undefined,
       avatar: row.avatar ?? undefined,
+      buriedAt: row.buried_at ?? undefined,
     })
   }
   stmt.free()
@@ -523,7 +529,7 @@ export function addPerson(person: Omit<Person, 'id'>): Person {
   if (!db || !current || !isAdmin()) return newPerson
   try {
     const stmt = db.prepare(
-      'INSERT INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     stmt.bind([
       newPerson.id,
@@ -536,6 +542,7 @@ export function addPerson(person: Omit<Person, 'id'>): Person {
       newPerson.gender ?? null,
       newPerson.notes ?? null,
       newPerson.avatar ?? null,
+      newPerson.buriedAt ?? null,
     ])
     stmt.step()
     stmt.free()
@@ -553,7 +560,7 @@ export function importPerson(person: Person): void {
   if (!db || !currentUserId || !isAdmin()) return
   const name = safePersonName(person?.name)
   const stmt = db.prepare(
-    'INSERT OR REPLACE INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT OR REPLACE INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   )
   stmt.bind([
     person.id,
@@ -566,6 +573,7 @@ export function importPerson(person: Person): void {
     person.gender ?? null,
     person.notes ?? null,
     person.avatar ?? null,
+    person.buriedAt ?? null,
   ])
   stmt.step()
   stmt.free()
@@ -587,7 +595,7 @@ export function updatePerson(id: string, updates: Partial<Omit<Person, 'id'>>): 
   const next = { ...p, ...updates }
   const safeName = safePersonName(next.name)
   const stmt = db.prepare(
-    'UPDATE people SET name = ?, title = ?, address = ?, birth_date = ?, death_date = ?, gender = ?, notes = ?, avatar = ? WHERE id = ?'
+    'UPDATE people SET name = ?, title = ?, address = ?, birth_date = ?, death_date = ?, gender = ?, notes = ?, avatar = ?, buried_at = ? WHERE id = ?'
   )
   stmt.bind([
     safeName,
@@ -598,6 +606,7 @@ export function updatePerson(id: string, updates: Partial<Omit<Person, 'id'>>): 
     next.gender ?? null,
     next.notes ?? null,
     next.avatar ?? null,
+    next.buriedAt ?? null,
     id,
   ])
   stmt.step()

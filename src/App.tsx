@@ -96,9 +96,9 @@ export default function App() {
       if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
       return s
     }
-    const headers = ['id', 'name', 'title', 'address', 'birthDate', 'deathDate', 'gender', 'notes']
+    const headers = ['id', 'name', 'title', 'address', 'birthDate', 'deathDate', 'gender', 'notes', 'buriedAt']
     const rows = state.people.map((p) =>
-      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? ''].map(escape).join(',')
+      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? '', p.buriedAt ?? ''].map(escape).join(',')
     )
     const csv = [headers.join(','), ...rows].join('\r\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -146,7 +146,7 @@ export default function App() {
         const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
         const nameIdx = header.indexOf('name') >= 0 ? header.indexOf('name') : 0
         const cols: Record<string, number> = {}
-        ;['id', 'name', 'title', 'address', 'birthdate', 'deathdate', 'gender', 'notes'].forEach((k) => {
+        ;['id', 'name', 'title', 'address', 'birthdate', 'deathdate', 'gender', 'notes', 'buriedat'].forEach((k) => {
           const i = header.indexOf(k)
           if (i >= 0) cols[k] = i
         })
@@ -165,6 +165,7 @@ export default function App() {
             deathDate: cols['deathdate'] >= 0 && fields[cols['deathdate']] ? fields[cols['deathdate']].trim() || undefined : undefined,
             gender: (cols['gender'] >= 0 && fields[cols['gender']] ? fields[cols['gender']].trim() : undefined) as Person['gender'] | undefined,
             notes: cols['notes'] >= 0 && fields[cols['notes']] ? fields[cols['notes']].trim() || undefined : undefined,
+            buriedAt: cols['buriedat'] >= 0 && fields[cols['buriedat']] ? fields[cols['buriedat']].trim() || undefined : undefined,
           }
           importPerson(person)
           count++
