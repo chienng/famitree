@@ -146,9 +146,8 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
   if (!userId) return { people: [], relationships: [] }
   const people: Person[] = []
   const stmt = dbInstance.prepare(
-    'SELECT id, name, title, address, birth_date, death_date, gender, notes, avatar FROM people WHERE user_id = ?'
+    'SELECT id, name, title, address, birth_date, death_date, gender, notes, avatar FROM people'
   )
-  stmt.bind([userId])
   while (stmt.step()) {
     const row = stmt.getAsObject() as Record<string, string | undefined>
     people.push({
@@ -167,9 +166,8 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
 
   const relationships: Relationship[] = []
   const relStmt = dbInstance.prepare(
-    'SELECT id, type, person_id, related_id FROM relationships WHERE user_id = ?'
+    'SELECT id, type, person_id, related_id FROM relationships'
   )
-  relStmt.bind([userId])
   while (relStmt.step()) {
     const row = relStmt.getAsObject() as Record<string, string>
     relationships.push({
