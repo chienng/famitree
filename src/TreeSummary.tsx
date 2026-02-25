@@ -71,7 +71,9 @@ export function TreeSummary({
     : treeNodes
 
   const totalMembers = state.people.length
-  const parentChildRels = state.relationships.filter((r) => r.type === 'parent-child').length
+  const parentChildRels = state.relationships.filter(
+    (r) => r.type === 'parent-child' || r.type === 'parent-child-in-law' || r.type === 'parent-child-adopt'
+  ).length
   const spouseRels = state.relationships.filter((r) => r.type === 'spouse').length
   const rootCount = treeNodes.length
 

@@ -906,6 +906,30 @@
   grid-column: span 2;
 }
 
+.form-checkbox-label {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.form-checkbox-label input { margin: 0; }
+
+.form-checkbox-label-text {
+  order: 1;
+}
+
+.form-role-badge {
+  margin-left: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
 .modal-content--person-form .person-form .form-group textarea.form-notes {
   min-height: 4.5rem;
   height: auto;
@@ -1061,9 +1085,27 @@
 }
 
 .tree-panel {
-  padding: 1.25rem;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   min-height: 320px;
+  padding: 0 1.25rem 1.25rem 1.25rem;
+}
+
+.tree-panel-actions {
+  flex-shrink: 0;
+  padding: 1rem 0 0.75rem 0;
+  background: var(--tree-panel-bg, #fff);
+  z-index: 1;
+}
+
+.tree-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .empty-state {
@@ -1344,6 +1386,16 @@
   margin: 0 0 0.5rem 0;
 }
 
+.sidebar-form-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.sidebar-form-wrap .person-form {
+  max-width: 100%;
+}
+
 .sidebar-placeholder {
   color: #64748b;
   font-size: 0.9rem;
@@ -1622,6 +1674,51 @@ textarea {
   margin: 0;
 }
 
+.person-card-spouse {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0.35rem 0 0 0;
+}
+
+/* Focus view: previous generations above the tree */
+.tree-ancestors {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.tree-ancestors-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
+}
+.tree-ancestors-level {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+.tree-ancestor-chip {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+.tree-ancestor-chip:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+.tree-ancestor-chip.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+}
+
 /* Horizontal diamond layout: couple on left, connector, children on right */
 .tree-node--horizontal {
   display: flex;
@@ -1774,6 +1871,18 @@ textarea {
   object-fit: cover;
 }
 
+.tree-node-level {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
 .tree-node-title {
   font-size: 0.7rem;
   font-weight: 600;
@@ -1923,10 +2032,70 @@ textarea {
   overflow: auto;
 }
 
+.person-list-by-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.person-list-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.person-list-group-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.35);
+}
+
+.person-list-by-level {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.person-list-level {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.person-list-level-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
 .person-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.75rem;
+}
+
+/* List couple: main card with spouse card(s) next to it, same as tree (side by side); one couple per grid cell */
+.person-list .list-couple.tree-couple {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* List cards: same compact width as tree page (150–200px) */
+.person-list .list-couple .tree-node-card {
+  flex-shrink: 0;
+  width: 180px;
+  min-width: 150px;
+  max-width: 200px;
 }
 
 .section-title {
@@ -1947,8 +2116,35 @@ textarea {
 
 .rel-actions-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(7, 1fr);
   gap: 1rem 1.25rem;
+}
+.rel-inlaw-sublabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.rel-inlaw-child-select {
+  width: 100%;
+}
+
+.rel-new-spouse-name,
+.rel-new-spouse-address,
+.rel-inlaw-name,
+.rel-inlaw-address,
+.rel-inlaw-gender {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+.rel-inlaw-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.rel-inlaw-buttons .btn {
+  width: 100%;
 }
 
 .rel-actions-col {
@@ -2107,6 +2303,11 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+@media (max-width: 1100px) {
+  .rel-actions-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
 @media (max-width: 900px) {
   .main {
@@ -2125,8 +2326,39 @@ textarea {
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 0.75rem;
   flex-wrap: wrap;
+}
+
+.tree-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tree-zoom-controls .btn {
+  padding: 0.35rem 0.6rem;
+  min-width: 2rem;
+}
+.tree-zoom-value {
+  font-size: 0.85rem;
+  color: #64748b;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.tree-scroll-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .tree-scroll-hint {
+    display: none;
+  }
+}
+
+.tree-zoom-inner {
+  display: inline-block;
 }
 
 .tree-branch-combobox {

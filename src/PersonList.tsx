@@ -48,7 +48,6 @@ export function PersonList({ people, searchQuery, selectedId, onSelect }: Person
             <p className="meta">
               {[p.birthDate, p.deathDate].filter(Boolean).map(formatDateDisplay).join(' – ') || t('list.noDates')}
               {p.gender && ` · ${t('gender.' + p.gender)}`}
-              {p.buriedAt && ` · ${t('form.buriedAt')}: ${p.buriedAt}`}
             </p>
           </div>
         ))}
