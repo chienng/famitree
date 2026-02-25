@@ -126,6 +126,16 @@ function ensureUserColumns(dbInstance: Database): void {
   } catch {
     // column already exists
   }
+  try {
+    dbInstance.run('ALTER TABLE people ADD COLUMN member_role TEXT')
+  } catch {
+    // column already exists
+  }
+  try {
+    dbInstance.run('ALTER TABLE people ADD COLUMN birth_place TEXT')
+  } catch {
+    // column already exists
+  }
 }
 
 function migrateExistingDataToDefaultUser(dbInstance: Database): void {
@@ -151,21 +161,24 @@ function loadStateFromDb(dbInstance: Database, userId: string | null): FamilyTre
   if (!userId) return { people: [], relationships: [] }
   const people: Person[] = []
   const stmt = dbInstance.prepare(
-    'SELECT id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at FROM people'
+    'SELECT id, name, title, address, birth_place, birth_date, death_date, gender, notes, avatar, buried_at, member_role FROM people'
   )
   while (stmt.step()) {
-    const row = stmt.getAsObject() as Record<string, string | undefined>
+    const row = stmt.getAsObject() as Record<string, string | number | undefined>
+    const str = (v: string | number | undefined): string | undefined => (v == null ? undefined : String(v))
     people.push({
       id: row.id as string,
       name: row.name as string,
-      title: row.title ?? undefined,
-      address: row.address ?? undefined,
-      birthDate: row.birth_date ?? undefined,
-      deathDate: row.death_date ?? undefined,
+      title: str(row.title),
+      address: str(row.address),
+      birthPlace: str(row.birth_place),
+      birthDate: str(row.birth_date),
+      deathDate: str(row.death_date),
       gender: (row.gender as Person['gender']) ?? undefined,
-      notes: row.notes ?? undefined,
-      avatar: row.avatar ?? undefined,
-      buriedAt: row.buried_at ?? undefined,
+      notes: str(row.notes),
+      avatar: str(row.avatar),
+      buriedAt: str(row.buried_at),
+      memberRole: (row.member_role as Person['memberRole']) ?? undefined,
     })
   }
   stmt.free()
@@ -529,7 +542,7 @@ export function addPerson(person: Omit<Person, 'id'>): Person {
   if (!db || !current || !isAdmin()) return newPerson
   try {
     const stmt = db.prepare(
-      'INSERT INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO people (id, user_id, name, title, address, birth_place, birth_date, death_date, gender, notes, avatar, buried_at, member_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     stmt.bind([
       newPerson.id,
@@ -537,12 +550,14 @@ export function addPerson(person: Omit<Person, 'id'>): Person {
       nameValue,
       newPerson.title ?? null,
       newPerson.address ?? null,
+      newPerson.birthPlace ?? null,
       newPerson.birthDate ?? null,
       newPerson.deathDate ?? null,
       newPerson.gender ?? null,
       newPerson.notes ?? null,
       newPerson.avatar ?? null,
       newPerson.buriedAt ?? null,
+      newPerson.memberRole ?? null,
     ])
     stmt.step()
     stmt.free()
@@ -560,7 +575,7 @@ export function importPerson(person: Person): void {
   if (!db || !currentUserId || !isAdmin()) return
   const name = safePersonName(person?.name)
   const stmt = db.prepare(
-    'INSERT OR REPLACE INTO people (id, user_id, name, title, address, birth_date, death_date, gender, notes, avatar, buried_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    'INSERT OR REPLACE INTO people (id, user_id, name, title, address, birth_place, birth_date, death_date, gender, notes, avatar, buried_at, member_role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   )
   stmt.bind([
     person.id,
@@ -568,12 +583,14 @@ export function importPerson(person: Person): void {
     name,
     person.title ?? null,
     person.address ?? null,
+    person.birthPlace ?? null,
     person.birthDate ?? null,
     person.deathDate ?? null,
     person.gender ?? null,
     person.notes ?? null,
     person.avatar ?? null,
     person.buriedAt ?? null,
+    person.memberRole ?? null,
   ])
   stmt.step()
   stmt.free()
@@ -595,18 +612,20 @@ export function updatePerson(id: string, updates: Partial<Omit<Person, 'id'>>): 
   const next = { ...p, ...updates }
   const safeName = safePersonName(next.name)
   const stmt = db.prepare(
-    'UPDATE people SET name = ?, title = ?, address = ?, birth_date = ?, death_date = ?, gender = ?, notes = ?, avatar = ?, buried_at = ? WHERE id = ?'
+    'UPDATE people SET name = ?, title = ?, address = ?, birth_place = ?, birth_date = ?, death_date = ?, gender = ?, notes = ?, avatar = ?, buried_at = ?, member_role = ? WHERE id = ?'
   )
   stmt.bind([
     safeName,
     next.title ?? null,
     next.address ?? null,
+    next.birthPlace ?? null,
     next.birthDate ?? null,
     next.deathDate ?? null,
     next.gender ?? null,
     next.notes ?? null,
     next.avatar ?? null,
     next.buriedAt ?? null,
+    next.memberRole ?? null,
     id,
   ])
   stmt.step()
@@ -637,11 +656,15 @@ export function deletePerson(id: string): void {
   emit()
 }
 
-export function addParentChild(parentId: string, childId: string): void {
+function addParentChildRelation(
+  parentId: string,
+  childId: string,
+  type: 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt'
+): void {
   if (!isAdmin() || parentId === childId || !db) return
   const exists = state.relationships.some(
     (r) =>
-      r.type === 'parent-child' &&
+      (r.type === 'parent-child' || r.type === 'parent-child-in-law' || r.type === 'parent-child-adopt') &&
       ((r.personId === parentId && r.relatedId === childId) ||
         (r.personId === childId && r.relatedId === parentId))
   )
@@ -649,20 +672,29 @@ export function addParentChild(parentId: string, childId: string): void {
   const id = uuid()
   if (!currentUserId) return
   const stmt = db.prepare(
-    "INSERT INTO relationships (id, user_id, type, person_id, related_id) VALUES (?, ?, 'parent-child', ?, ?)"
+    'INSERT INTO relationships (id, user_id, type, person_id, related_id) VALUES (?, ?, ?, ?, ?)'
   )
-  stmt.bind([id, currentUserId, parentId, childId])
+  stmt.bind([id, currentUserId, type, parentId, childId])
   stmt.step()
   stmt.free()
   state = {
     ...state,
-    relationships: [
-      ...state.relationships,
-      { id, type: 'parent-child', personId: parentId, relatedId: childId },
-    ],
+    relationships: [...state.relationships, { id, type, personId: parentId, relatedId: childId }],
   }
   persistDb()
   emit()
+}
+
+export function addParentChild(parentId: string, childId: string): void {
+  addParentChildRelation(parentId, childId, 'parent-child')
+}
+
+export function addParentChildInLaw(parentId: string, childId: string): void {
+  addParentChildRelation(parentId, childId, 'parent-child-in-law')
+}
+
+export function addParentChildAdopt(parentId: string, childId: string): void {
+  addParentChildRelation(parentId, childId, 'parent-child-adopt')
 }
 
 export function addSpouse(personId: string, spouseId: string): void {
@@ -708,45 +740,78 @@ export function getPerson(id: string): Person | undefined {
   return state.people.find((p) => p.id === id)
 }
 
+const PARENT_CHILD_TYPES = ['parent-child', 'parent-child-in-law', 'parent-child-adopt'] as const
+
 export function getChildrenIds(parentId: string): string[] {
   return state.relationships
-    .filter((r) => r.type === 'parent-child' && r.personId === parentId)
+    .filter((r) => PARENT_CHILD_TYPES.includes(r.type as (typeof PARENT_CHILD_TYPES)[number]) && r.personId === parentId)
     .map((r) => r.relatedId)
 }
 
 export function getParentIds(childId: string): string[] {
   return state.relationships
-    .filter((r) => r.type === 'parent-child' && r.relatedId === childId)
+    .filter((r) => PARENT_CHILD_TYPES.includes(r.type as (typeof PARENT_CHILD_TYPES)[number]) && r.relatedId === childId)
     .map((r) => r.personId)
 }
 
 export function getSpouseId(personId: string): string | undefined {
-  const r = state.relationships.find(
-    (r) => r.type === 'spouse' && (r.personId === personId || r.relatedId === personId)
-  )
-  return r ? (r.personId === personId ? r.relatedId : r.personId) : undefined
+  const ids = getSpouseIds(personId)
+  return ids[0]
 }
 
-export function getParentRelationships(childId: string): { id: string; person: Person }[] {
+/** All spouse IDs for this person (person_id = personId or related_id = personId), in stable order. */
+export function getSpouseIds(personId: string): string[] {
   return state.relationships
-    .filter((r) => r.type === 'parent-child' && r.relatedId === childId)
-    .map((r) => ({ id: r.id, person: state.people.find((p) => p.id === r.personId)! }))
+    .filter((r) => r.type === 'spouse' && (r.personId === personId || r.relatedId === personId))
+    .map((r) => (r.personId === personId ? r.relatedId : r.personId))
+}
+
+export function getParentRelationships(
+  childId: string
+): { id: string; person: Person; type: 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt' }[] {
+  return state.relationships
+    .filter(
+      (r) =>
+        PARENT_CHILD_TYPES.includes(r.type as (typeof PARENT_CHILD_TYPES)[number]) && r.relatedId === childId
+    )
+    .map((r) => ({
+      id: r.id,
+      person: state.people.find((p) => p.id === r.personId)!,
+      type: r.type as 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt',
+    }))
     .filter((x) => x.person)
 }
 
-export function getChildRelationships(parentId: string): { id: string; person: Person }[] {
+export function getChildRelationships(
+  parentId: string
+): { id: string; person: Person; type: 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt' }[] {
   return state.relationships
-    .filter((r) => r.type === 'parent-child' && r.personId === parentId)
-    .map((r) => ({ id: r.id, person: state.people.find((p) => p.id === r.relatedId)! }))
+    .filter(
+      (r) =>
+        PARENT_CHILD_TYPES.includes(r.type as (typeof PARENT_CHILD_TYPES)[number]) && r.personId === parentId
+    )
+    .map((r) => ({
+      id: r.id,
+      person: state.people.find((p) => p.id === r.relatedId)!,
+      type: r.type as 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt',
+    }))
     .filter((x) => x.person)
 }
 
 export function getSpouseRelationship(personId: string): { id: string; person: Person } | null {
-  const r = state.relationships.find(
-    (r) => r.type === 'spouse' && (r.personId === personId || r.relatedId === personId)
-  )
-  if (!r) return null
-  const spouseId = r.personId === personId ? r.relatedId : r.personId
-  const person = state.people.find((p) => p.id === spouseId)
-  return person ? { id: r.id, person } : null
+  const list = getSpouseRelationships(personId)
+  return list.length ? { id: list[0].id, person: list[0].person } : null
+}
+
+/** All spouse relationships in order (vợ/chồng 1, 2, ...). */
+export function getSpouseRelationships(personId: string): { id: string; person: Person; index: number }[] {
+  const rels = state.relationships
+    .filter((r) => r.type === 'spouse' && (r.personId === personId || r.relatedId === personId))
+  const result: { id: string; person: Person; index: number }[] = []
+  rels.forEach((r, i) => {
+    const spouseId = r.personId === personId ? r.relatedId : r.personId
+    const person = state.people.find((p) => p.id === spouseId)
+    if (person) result.push({ id: r.id, person, index: i + 1 })
+  })
+  return result
 }

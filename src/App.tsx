@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { getState, subscribe, getUsers, getPerson, getChildrenIds, updateUserByAdmin, deleteUserByAdmin, importPerson, exportDatabase, loadDatabaseFromBuffer, hasServerDbApi } from './store'
 import type { UserRow } from './store'
-import { buildTree, buildTreeRootedAt, filterTreeByQuery, getMainPersonIds, getBranchPersonIds } from './treeUtils'
+import { buildTree, buildTreeMaleRootsOnly, buildTreeRootedAt, filterTreeByQuery, getMainPersonIds, getBranchPersonIds, getAncestorLevels } from './treeUtils'
 import { TreeView } from './TreeView'
 import { PersonList } from './PersonList'
 import { PersonForm } from './PersonForm'
@@ -31,6 +31,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  /** When true, selectedPerson was set by double-click to show tree — do not open edit modal. */
+  const [hideModalForTreeFocus, setHideModalForTreeFocus] = useState(false)
   const [view, setView] = useState<'tree' | 'list' | 'users' | 'summary' | 'reminders'>('tree')
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
@@ -58,6 +60,10 @@ export default function App() {
   const branchDropdownRef = useRef<HTMLDivElement>(null)
   const importCsvInputRef = useRef<HTMLInputElement>(null)
   const restoreDbInputRef = useRef<HTMLInputElement>(null)
+  const treePanelRef = useRef<HTMLDivElement>(null)
+  const treeContentRef = useRef<HTMLDivElement>(null)
+  const [treeZoom, setTreeZoom] = useState(1)
+  const [treeSize, setTreeSize] = useState<{ w: number; h: number } | null>(null)
   const isAdmin = user.username === 'admin'
 
   useEffect(() => {
@@ -96,9 +102,9 @@ export default function App() {
       if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
       return s
     }
-    const headers = ['id', 'name', 'title', 'address', 'birthDate', 'deathDate', 'gender', 'notes', 'buriedAt']
+    const headers = ['id', 'name', 'title', 'address', 'birthPlace', 'birthDate', 'deathDate', 'gender', 'notes', 'buriedAt', 'memberRole']
     const rows = state.people.map((p) =>
-      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? '', p.buriedAt ?? ''].map(escape).join(',')
+      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthPlace ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? '', p.buriedAt ?? '', p.memberRole ?? ''].map(escape).join(',')
     )
     const csv = [headers.join(','), ...rows].join('\r\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -146,7 +152,7 @@ export default function App() {
         const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
         const nameIdx = header.indexOf('name') >= 0 ? header.indexOf('name') : 0
         const cols: Record<string, number> = {}
-        ;['id', 'name', 'title', 'address', 'birthdate', 'deathdate', 'gender', 'notes', 'buriedat'].forEach((k) => {
+        ;['id', 'name', 'title', 'address', 'birthplace', 'birthdate', 'deathdate', 'gender', 'notes', 'buriedat', 'memberrole'].forEach((k) => {
           const i = header.indexOf(k)
           if (i >= 0) cols[k] = i
         })
@@ -161,11 +167,13 @@ export default function App() {
             name,
             title: cols['title'] >= 0 && fields[cols['title']] ? fields[cols['title']].trim() || undefined : undefined,
             address: cols['address'] >= 0 && fields[cols['address']] ? fields[cols['address']].trim() || undefined : undefined,
+            birthPlace: cols['birthplace'] >= 0 && fields[cols['birthplace']] ? fields[cols['birthplace']].trim() || undefined : undefined,
             birthDate: cols['birthdate'] >= 0 && fields[cols['birthdate']] ? fields[cols['birthdate']].trim() || undefined : undefined,
             deathDate: cols['deathdate'] >= 0 && fields[cols['deathdate']] ? fields[cols['deathdate']].trim() || undefined : undefined,
             gender: (cols['gender'] >= 0 && fields[cols['gender']] ? fields[cols['gender']].trim() : undefined) as Person['gender'] | undefined,
             notes: cols['notes'] >= 0 && fields[cols['notes']] ? fields[cols['notes']].trim() || undefined : undefined,
             buriedAt: cols['buriedat'] >= 0 && fields[cols['buriedat']] ? fields[cols['buriedat']].trim() || undefined : undefined,
+            memberRole: (cols['memberrole'] >= 0 && fields[cols['memberrole']] ? fields[cols['memberrole']].trim() : undefined) as Person['memberRole'] | undefined,
           }
           importPerson(person)
           count++
@@ -219,14 +227,21 @@ export default function App() {
   const selectedIsRoot = selectedBranchId != null && maleRootNodes.some((n) => n.person.id === selectedBranchId)
   const branchFilteredNodes =
     !selectedBranchValid
-      ? treeNodes
-      : selectedIsRoot
-        ? treeNodes.filter((n) => n.person.id === selectedBranchId)
-        : buildTreeRootedAt(selectedBranchId!)
+      ? buildTreeMaleRootsOnly()
+      : buildTreeRootedAt(selectedBranchId!)
+  const focusTreeNodes =
+    selectedPerson && getPerson(selectedPerson.id)
+      ? buildTreeRootedAt(selectedPerson.id)
+      : null
+  const displayTreeNodes = focusTreeNodes ?? branchFilteredNodes
   const filteredTreeNodes =
     trimmedSearch === ''
-      ? branchFilteredNodes
-      : filterTreeByQuery(branchFilteredNodes, searchQuery)
+      ? displayTreeNodes
+      : filterTreeByQuery(displayTreeNodes, searchQuery)
+  const ancestorLevels =
+    selectedPerson && getPerson(selectedPerson.id)
+      ? getAncestorLevels(selectedPerson.id, 2)
+      : null
   const selectedBranchDisplayLabel =
     selectedBranchValid && selectedBranchId
       ? selectedIsRoot
@@ -242,6 +257,49 @@ export default function App() {
     trimmedSearch === ''
       ? listPeopleBase
       : listPeopleBase.filter((p) => p.name.toLowerCase().includes(trimmedSearch))
+
+  useLayoutEffect(() => {
+    if (view !== 'tree' || !treeContentRef.current || filteredTreeNodes.length === 0) return
+    const el = treeContentRef.current
+    const w = el.scrollWidth
+    const h = el.scrollHeight
+    setTreeSize((prev) => (prev?.w === w && prev?.h === h ? prev : { w, h }))
+  }, [view, filteredTreeNodes.length, filteredTreeNodes, ancestorLevels])
+
+  const handleTreeFitToView = () => {
+    const panel = treePanelRef.current
+    const size = treeSize
+    if (!panel || !size || size.w <= 0 || size.h <= 0) return
+    const pw = panel.clientWidth - 32
+    const ph = panel.clientHeight - 48
+    if (pw <= 0 || ph <= 0) return
+    const zoom = Math.min(pw / size.w, ph / size.h, 1)
+    setTreeZoom(Math.max(0.25, Math.min(1.5, zoom)))
+  }
+
+  const handleTreeZoomIn = () => setTreeZoom((z) => Math.min(1.5, z * 1.2))
+  const handleTreeZoomOut = () => setTreeZoom((z) => Math.max(0.25, z / 1.2))
+
+  const handleTreePanelWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!e.shiftKey) return
+    const el = treePanelRef.current
+    if (!el) return
+    el.scrollLeft += e.deltaY
+    e.preventDefault()
+  }
+
+  /** Single click: open edit person form. */
+  const handlePersonSelect = (person: Person | null) => {
+    setHideModalForTreeFocus(false)
+    setSelectedPerson(person)
+  }
+  /** Double-click: show tree view focused on that person; do not open edit modal. */
+  const handlePersonDoubleClick = (person: Person) => {
+    setView('tree')
+    setSelectedPerson(person)
+    setShowAddForm(false)
+    setHideModalForTreeFocus(true)
+  }
 
   return (
     <div className="app">
@@ -819,7 +877,11 @@ export default function App() {
           </div>
         )}
         {view === 'tree' && (
-          <div className="tree-panel">
+          <div
+            className="tree-panel"
+            ref={treePanelRef}
+            onWheel={handleTreePanelWheel}
+          >
             {treeNodes.length === 0 ? (
               <div className="empty-state">
                 <p>{t('tree.empty')}</p>
@@ -875,6 +937,7 @@ export default function App() {
                                   aria-selected={!selectedBranchValid || selectedBranchId === null}
                                   onClick={() => {
                                     setSelectedBranchId(null)
+                                    setSelectedPerson(null)
                                     setBranchDropdownOpen(false)
                                     setBranchSearchQuery('')
                                   }}
@@ -891,6 +954,7 @@ export default function App() {
                                     aria-selected={selectedBranchId === person.id}
                                     onClick={() => {
                                       setSelectedBranchId(person.id)
+                                      setSelectedPerson(null)
                                       setBranchDropdownOpen(false)
                                       setBranchSearchQuery('')
                                     }}
@@ -908,6 +972,21 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  <div className="tree-zoom-controls">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={handleTreeFitToView}
+                      title={t('tree.fitToView')}
+                      aria-label={t('tree.fitToView')}
+                    >
+                      {t('tree.fitToView')}
+                    </button>
+                    <button type="button" className="btn" onClick={handleTreeZoomOut} aria-label={t('tree.zoomOut')}>−</button>
+                    <span className="tree-zoom-value" aria-hidden>{Math.round(treeZoom * 100)}%</span>
+                    <button type="button" className="btn" onClick={handleTreeZoomIn} aria-label={t('tree.zoomIn')}>+</button>
+                    <span className="tree-scroll-hint" title={t('tree.shiftScrollHint')}>{t('tree.shiftScrollHint')}</span>
+                  </div>
                   <button
                     type="button"
                     className="btn"
@@ -932,13 +1011,41 @@ export default function App() {
                     {t('tree.print')}
                   </button>
                 </div>
-                <TreeView
-                  nodes={filteredTreeNodes}
-                  mainPersonIds={getMainPersonIds(filteredTreeNodes)}
-                  selectedId={selectedPerson?.id}
-                  onSelect={setSelectedPerson}
-                  t={t}
-                />
+                <div
+                  className="tree-panel-scroll"
+                  ref={treePanelRef}
+                  onWheel={handleTreePanelWheel}
+                >
+                  <div
+                    className="tree-zoom-wrap"
+                    style={{
+                      width: treeSize ? treeSize.w * treeZoom : 'auto',
+                      height: treeSize ? treeSize.h * treeZoom : 'auto',
+                      minHeight: treeSize ? undefined : 200,
+                    }}
+                  >
+                    <div
+                      ref={treeContentRef}
+                      className="tree-zoom-inner"
+                      style={{
+                        transform: `scale(${treeZoom})`,
+                        transformOrigin: '0 0',
+                        width: treeSize?.w ?? 'max-content',
+                        height: treeSize?.h ?? 'max-content',
+                      }}
+                    >
+                      <TreeView
+                      nodes={filteredTreeNodes}
+                      mainPersonIds={getMainPersonIds(filteredTreeNodes)}
+                      selectedId={selectedPerson?.id}
+                      onSelect={handlePersonSelect}
+                      onDoubleClick={handlePersonDoubleClick}
+                      t={t}
+                      ancestorLevels={ancestorLevels}
+                    />
+                    </div>
+                  </div>
+                </div>
               </>
             )}
           </div>
@@ -984,6 +1091,7 @@ export default function App() {
                               aria-selected={!selectedBranchValid || selectedBranchId === null}
                               onClick={() => {
                                 setSelectedBranchId(null)
+                                setSelectedPerson(null)
                                 setBranchDropdownOpen(false)
                                 setBranchSearchQuery('')
                               }}
@@ -1000,6 +1108,7 @@ export default function App() {
                                 aria-selected={selectedBranchId === person.id}
                                 onClick={() => {
                                   setSelectedBranchId(person.id)
+                                  setSelectedPerson(null)
                                   setBranchDropdownOpen(false)
                                   setBranchSearchQuery('')
                                 }}
@@ -1021,8 +1130,8 @@ export default function App() {
             <PersonList
               people={filteredPeople}
               searchQuery={trimmedSearch}
-              onSelect={setSelectedPerson}
               selectedId={selectedPerson?.id}
+              onSelect={setSelectedPerson}
             />
           </div>
         )}
@@ -1062,7 +1171,7 @@ export default function App() {
         </aside>
         )}
 
-        {isAdmin && (showAddForm || selectedPerson) && (
+        {isAdmin && (showAddForm || (selectedPerson && !hideModalForTreeFocus)) && (
           <div
             className="modal-overlay"
             role="dialog"
