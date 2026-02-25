@@ -24,6 +24,17 @@ export function buildTree(): TreeNode[] {
   return roots.map((p) => buildNode(p.id, seen))
 }
 
+/**
+ * Build tree with only male roots, each root built with an independent seen set
+ * so every branch has full depth (no truncation). Use when showing "all branches".
+ */
+export function buildTreeMaleRootsOnly(): TreeNode[] {
+  const nodes = buildTree()
+  const maleRoots = nodes.filter((n) => n.person.gender === 'male')
+  if (maleRoots.length === 0) return []
+  return maleRoots.map((root) => buildNode(root.person.id, new Set<string>()))
+}
+
 function nodeFromPerson(person: Person): TreeNode {
   const spouseIds = getSpouseIds(person.id)
   const spouses = spouseIds.map((id) => getPerson(id)).filter((p): p is Person => !!p)

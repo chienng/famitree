@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { getState, subscribe, getUsers, getPerson, getChildrenIds, updateUserByAdmin, deleteUserByAdmin, importPerson, exportDatabase, loadDatabaseFromBuffer, hasServerDbApi } from './store'
 import type { UserRow } from './store'
-import { buildTree, buildTreeRootedAt, filterTreeByQuery, getMainPersonIds, getBranchPersonIds, getAncestorLevels } from './treeUtils'
+import { buildTree, buildTreeMaleRootsOnly, buildTreeRootedAt, filterTreeByQuery, getMainPersonIds, getBranchPersonIds, getAncestorLevels } from './treeUtils'
 import { TreeView } from './TreeView'
 import { PersonList } from './PersonList'
 import { PersonForm } from './PersonForm'
@@ -228,10 +228,8 @@ export default function App() {
   const selectedIsRoot = selectedBranchId != null && maleRootNodes.some((n) => n.person.id === selectedBranchId)
   const branchFilteredNodes =
     !selectedBranchValid
-      ? treeNodes.filter((n) => n.person.gender === 'male')
-      : selectedIsRoot
-        ? treeNodes.filter((n) => n.person.id === selectedBranchId)
-        : buildTreeRootedAt(selectedBranchId!)
+      ? buildTreeMaleRootsOnly()
+      : buildTreeRootedAt(selectedBranchId!)
   const focusTreeNodes =
     selectedPerson && getPerson(selectedPerson.id)
       ? buildTreeRootedAt(selectedPerson.id)
