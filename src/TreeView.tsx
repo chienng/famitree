@@ -218,7 +218,7 @@ function TreeNodeComponent({
               }
             }}
           >
-            <span className="tree-node-level" aria-hidden>{t('treeView.generationLevel', { n: node.person.generation ?? level })}</span>
+            <span className="tree-node-level" aria-hidden>{t('treeView.generationLevel', { n: level })}</span>
             <Avatar name={node.person.name} avatar={node.person.avatar} gender={node.person.gender} className="tree-node-avatar" />
             <p className="tree-node-title">{node.person.title?.trim() ? node.person.title.trim() : t(personTitleKey)}</p>
             <p className="name">{node.person.name}</p>

@@ -102,9 +102,9 @@ export default function App() {
       if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
       return s
     }
-    const headers = ['id', 'name', 'title', 'address', 'birthPlace', 'birthDate', 'deathDate', 'gender', 'notes', 'buriedAt', 'memberRole', 'generation']
+    const headers = ['id', 'name', 'title', 'address', 'birthPlace', 'birthDate', 'deathDate', 'gender', 'notes', 'buriedAt', 'memberRole']
     const rows = state.people.map((p) =>
-      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthPlace ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? '', p.buriedAt ?? '', p.memberRole ?? '', p.generation != null ? String(p.generation) : ''].map(escape).join(',')
+      [p.id, p.name, p.title ?? '', p.address ?? '', p.birthPlace ?? '', p.birthDate ?? '', p.deathDate ?? '', p.gender ?? '', p.notes ?? '', p.buriedAt ?? '', p.memberRole ?? ''].map(escape).join(',')
     )
     const csv = [headers.join(','), ...rows].join('\r\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -152,7 +152,7 @@ export default function App() {
         const header = parseCsvLine(lines[0]).map((h) => h.toLowerCase())
         const nameIdx = header.indexOf('name') >= 0 ? header.indexOf('name') : 0
         const cols: Record<string, number> = {}
-        ;['id', 'name', 'title', 'address', 'birthplace', 'birthdate', 'deathdate', 'gender', 'notes', 'buriedat', 'memberrole', 'generation'].forEach((k) => {
+        ;['id', 'name', 'title', 'address', 'birthplace', 'birthdate', 'deathdate', 'gender', 'notes', 'buriedat', 'memberrole'].forEach((k) => {
           const i = header.indexOf(k)
           if (i >= 0) cols[k] = i
         })
@@ -174,7 +174,6 @@ export default function App() {
             notes: cols['notes'] >= 0 && fields[cols['notes']] ? fields[cols['notes']].trim() || undefined : undefined,
             buriedAt: cols['buriedat'] >= 0 && fields[cols['buriedat']] ? fields[cols['buriedat']].trim() || undefined : undefined,
             memberRole: (cols['memberrole'] >= 0 && fields[cols['memberrole']] ? fields[cols['memberrole']].trim() : undefined) as Person['memberRole'] | undefined,
-            generation: cols['generation'] >= 0 && fields[cols['generation']] ? (() => { const n = parseInt(fields[cols['generation']].trim(), 10); return !Number.isNaN(n) && n >= 1 ? n : undefined; })() : undefined,
           }
           importPerson(person)
           count++

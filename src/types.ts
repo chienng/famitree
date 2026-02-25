@@ -18,8 +18,6 @@ export interface Person {
   avatar?: string
   /** Role in family. Default 'main'. Daughter-/son-in-law only when added as spouse of a main member. */
   memberRole?: MemberRole
-  /** Generation level (đời): 1 = first gen, 2 = second, etc. Stored in DB; used for list/tree display. */
-  generation?: number
 }
 
 export type ParentChildRelationshipType = 'parent-child' | 'parent-child-in-law' | 'parent-child-adopt'
