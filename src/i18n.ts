@@ -363,7 +363,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     'auth.logout': 'Đăng xuất',
     'auth.username': 'Tên đăng nhập',
     'auth.password': 'Mật khẩu',
-    'auth.loginTitle': 'Quản lý gia phả dòng họ',
+    'auth.loginTitle': 'Đăng nhập hệ thống Gia Phả',
     'auth.registerTitle': 'Tạo tài khoản',
     'auth.noAccount': 'Chưa có tài khoản? Đăng ký',
     'auth.hasAccount': 'Đã có tài khoản? Đăng nhập',

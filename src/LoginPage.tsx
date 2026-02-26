@@ -65,9 +65,8 @@ export function LoginPage() {
       <div className="auth-page">
         <div className="auth-card">
           <h1 className="auth-logo">
-            <img src="/logo.png" alt="FamiTree" />
+            <img src="/avatar.png" alt="FamiTree" />
           </h1>
-          <p className="auth-tagline">{t('app.tagline')}</p>
           <h2 className="auth-title">{t('auth.loginTitle')}</h2>
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
