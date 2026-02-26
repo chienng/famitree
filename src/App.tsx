@@ -14,6 +14,7 @@ import { useLocale } from './LocaleContext'
 import { useAuth } from './AuthContext'
 import { getCurrentAge } from './dateUtils'
 import type { Person } from './types'
+import ReactMarkdown from "react-markdown";
 import './App.css'
 
 export default function App() {
@@ -89,10 +90,10 @@ export default function App() {
     return () => document.removeEventListener('click', close)
   }, [branchDropdownOpen])
 
-  // Lazy-load intro text from public/intro.txt when intro page is first opened
+  // Lazy-load intro text from public/intro.md when intro page is first opened
   useEffect(() => {
     if (view !== 'intro' || introText !== null || introError !== null) return
-    fetch('/intro.txt')
+    fetch('/intro.md')
       .then((res) => {
         if (!res.ok) throw new Error(String(res.status))
         return res.text()
@@ -619,9 +620,9 @@ export default function App() {
               {introError && <p className="intro-error">{introError}</p>}
               {!introError && !introText && <p className="intro-loading">{t('intro.loading')}</p>}
               {introText && (
-                <pre className="intro-text">
+                <ReactMarkdown>
                   {introText}
-                </pre>
+                </ReactMarkdown>
               )}
             </div>
           </section>

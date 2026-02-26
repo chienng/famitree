@@ -1,11 +1,11 @@
 
 
-LỜI TỰA
+# LỜI TỰA
 
-Cây có gốc mới trổ cành xanh lá
-Nước có nguồn mới bể cả sông sâu
-Người ta nguồn gốc từ đâu?
-Có tổ tiên trước rồi sau có mình.
+*Cây có gốc mới trổ cành xanh lá*  
+*Nước có nguồn mới bể cả sông sâu*  
+*Người ta nguồn gốc từ đâu?*  
+*Có tổ tiên trước rồi sau có mình.*
 
 Câu ca dao ấy nói lên đạo lý của người Việt Nam chúng ta đối với việc ghi nhớ công đức và thờ phụng ông bà, tổ tiên, dẫu cho cuộc đời có trải qua nhiều thăng trầm, biến động. Việc thờ phụng ông bà, tổ tiên là phong tục, tập quán, cũng là một nét đẹp văn hóa của người Việt Nam từ biết bao đời nay.
 
@@ -19,7 +19,7 @@ Xuất phát từ lý do đó, Hậu duệ đời thứ sáu, Trưởng họ - �
 
 Việc khởi xướng và bắt đầu thu thập tư liệu xây dựng gia phả được tiến hành từ cuối năm 2014, song do thông tin của nhiều bậc tiền nhân không đầy đủ và việc xác minh thông tin gặp nhiều trở ngại; hơn thế nữa, việc nhập liệu và nghiên cứu cách thức trình bày cuốn gia phả sao cho khoa học cũng tốn nhiều thời gian, nên đến cuối năm 2017 mới thực sự hoàn thành. 
 
-Nội dung cuốn gia phả được biên soạn gồm 04 phần:
+**Nội dung cuốn gia phả được biên soạn gồm 04 phần:**
 - Phần thứ nhất - Phả ký: Đây là phần lịch sử tổng hợp, phản ánh toàn diện lịch sử dòng họ từ Cụ Tổ đầu tiên được biết đến cho tới ngày nay.
 - Phần thứ hai - Phả hệ: Đây là nội dung chính của gia phả, ghi thông tin chi tiết tất cả các thành viên trong dòng họ, theo nguyên tắc đích trước, thứ sau.
 - Phần thứ ba - Phả đồ: Trong phần này tên của từng thành viên, từ Cụ Tổ trở xuống đến đời hiện tại của cả dòng họ được trình bày từ trên xuống theo sơ đồ hình cây. Do khuôn khổ của cuốn gia phả không đủ để trình bày toàn bộ tên các thành viên thuộc dòng họ trên cùng một sơ đồ, nên mỗi nhánh lớn của dòng họ kể từ đời thứ 4 sẽ được trình bày trên một sơ đồ riêng.
@@ -38,9 +38,9 @@ Hậu duệ đời thứ sáu
 Trưởng họ
 NGUYỄN XUÂN BAN
 
-Phần 1. PHẢ KÝ
+## Phần 1. PHẢ KÝ
 
-Khái quát về Tổ quán của dòng họ
+**Khái quát về Tổ quán của dòng họ**
 
 Làng Nội, thuộc xã Đức Thượng là một làng quê nằm ở phía Bắc của huyện Hoài Đức, thành phố Hà Nội, cách trung tâm thành phố Hà Nội 18 Km. Toàn thôn hiện có 05 dòng họ quần tụ sinh sống, gồm họ Nguyễn, họ Phạm, họ Cao, họ Đinh, họ Đàm. Riêng họ Nguyễn có nhiều chi phái cùng tồn tại. Các thế hệ hậu duệ của các dòng họ trải qua hàng trăm năm ở xen kẽ nhau, luôn đoàn kết, xây dựng tình làng, nghĩa xóm tốt đẹp. 
 
@@ -48,7 +48,7 @@ Cụ Tổ họ Nguyễn của chúng ta, tên húy cụ ông là Nguyễn Văn B
 
 Họ Nguyễn chúng ta là họ tộc có truyền thống gia phong, nền nếp. Từ đời Cụ Tổ đến nay, con cháu họ Nguyễn qua các thế hệ luôn sống có thủy có chung, đoàn kết đùm bọc lẫn nhau; trong quan hệ xã hội luôn đề cao cái đức, cái tâm và sự thành đạt trong sự nghiệp. Những yếu tố đó luôn được coi trọng và trở thành bản sắc văn hóa cho các thế hệ con cháu noi theo.
 
-Hôn nhân, gia đình và nhân khẩu của dòng họ
+**Hôn nhân, gia đình và nhân khẩu của dòng họ**
 
 Trải qua các thời kỳ và tính chất của mỗi chế độ xã hội, đại đa số các thế hệ dâu, rể các đời sống hài hòa, dâu hiền rể thảo, duy trì tốt quan hệ huyết thống và quan hệ hôn nhân; đoàn kết gây dựng hạnh phúc gia đình, dòng tộc. 
 
@@ -56,15 +56,15 @@ Trước đây, cũng như các dòng họ trong làng, người họ Nguyễn �
 
 Về nhân khẩu, bắt đầu tính từ đời Cụ Tổ thì chỉ có 2 nhân khẩu. Đến đời thứ 7, thứ 8 thì trung bình đời sau có số nhân khẩu bằng khoảng trên dưới 2 lần đời trước. Đời thứ 6, thứ 7, là 2 đời có số nhân khẩu cao nhất, khoảng trên 70 người.
 
-Bảng thống kê số liệu và thay đổi nhân khẩu dòng họ đến đời thứ 8 (xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả)
+Bảng thống kê số liệu và thay đổi nhân khẩu dòng họ đến đời thứ 8 (xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả họ Nguyễn)
 
-Truyền thống lao động sản xuất
+**Truyền thống lao động sản xuất**
 
 Cùng với các họ tộc khác trong làng, con cháu của dòng họ đời này kế tiếp đời kia chủ yếu làm nông nghiệp và gắn bó mật thiết với ruộng đồng. Trước kia, ngoài nông nghiệp thì nghề thủ công như đan quạt cũng là một nghề phụ được nhiều thế hệ con cháu dòng họ tham gia những lúc nông nhàn để cải thiện kinh tế gia đình. Ngoài ra, các thế hệ con cháu dòng họ cũng theo một số nghề nghiệp khác như hai cụ Nguyễn Văn Thực và Vũ Thị Bình từng có nghề làm bánh nướng bánh dẻo, cụ Nguyễn Văn Quảng từng theo nghề làm bánh kẹo tại Hà Nội thở còn trẻ; ông Nguyễn Xuân Ban từng mở các nghề: làm kẹo và đổ buôn tại chợ Đồng Xuân (Hà Nội), làm đậu phụ, buôn bán quần áo, và chăn nuôi gia cầm (từ những năm 80, 90 thế kỷ trước); ông Nguyễn Văn Sơn từng gắn bó với nghề cơ khí, v.v…
 
 Ngày nay, với sự phát triển kinh tế - xã hội nói chung, nhiều con cháu dòng họ đã biết nhạy bén mở mang nhiều nghề khác, trong đó có nghề buôn bán, đặc biệt là sản xuất hoặc gia công các mặt hàng ăn vặt như kẹo, bánh, các loại hạt,… để đưa vào các đại lý hoặc hàng quán, đã mang lại nguồn thu nhập khá, giúp phát triển kinh tế gia đình.
 
-Các thế hệ con cháu dòng họ và vai trò với quê hương, đất nước
+**Các thế hệ con cháu dòng họ và vai trò với quê hương, đất nước**
 
 Mặc dù không phải dòng dõi quan lại, song nhiều bậc tiền nhân dòng họ Nguyễn chúng ta cũng đã có chức vị nhất định trong cộng đồng làng xã thuở xưa, như cụ Lý trưởng Nguyễn Văn Thao (đời thứ 2), cụ Lý trưởng Nguyễn Văn Bỉnh (đời thứ 2), cụ Lý trưởng Nguyễn Bá Ngư (đời thứ 3), v.v…, đã góp phần làm rạng danh dòng họ
 
@@ -76,7 +76,7 @@ Khi đất nước hòa bình, nhiều thế hệ con cháu dòng họ tiếp t�
 
 Bước vào thời kỳ đổi mới, nền kinh tế xã hội dần phát triển, con cháu họ Nguyễn từ đời thứ 7 có điều kiện tốt hơn để kế thừa những truyền thống tốt đẹp của dòng tộc, có điều kiện học hành tốt hơn, thành đạt hơn. Nhiều người đã trở thành thạc sĩ, kỹ sư, cử nhân, hiện đang là công chức, viên chức nhà nước, cán bộ trong lực lượng vũ trang và cả doanh nghiệp ngoài nhà nước.
 
-Về văn hóa, tín ngưỡng và việc hương khói, chăm sóc mộ phần các bậc tiền nhân
+**Về văn hóa, tín ngưỡng và việc hương khói, chăm sóc mộ phần các bậc tiền nhân**
 
 Từ giai đoạn khởi thủy đến nay, các gia đình trong dòng họ đều thể hiện trách nhiệm trong việc thờ cúng ông bà, tổ tiên chăm sóc tạo phúc đức cho con cháu; Có ý thức bảo vệ, cung tiến vật chất, làm công quả để tu bổ đình, chùa, các di tích lịch sử và những giá trị đạo đức, văn hóa của làng, xã. 
 
@@ -86,7 +86,7 @@ Những ngày lễ, tết, anh em họ hàng thường thăm hỏi chúc tết n
 
 Việc tìm tìm kiếm, quy tập, nâng cấp mộ phần các bậc tiền nhân được các thành viên họ tộc cùng đóng góp tùy theo điều kiện của mỗi gia đình. 
 
-Phương hướng xây dựng dòng họ
+**Phương hướng xây dựng dòng họ**
 
 Vai trò của gia đình và dòng tộc luôn được đánh giá cao trong văn hóa Việt Nam. Ý thức duy trì truyền thống văn hóa Việt Nam, biết tiếp thu cái mới phù hợp, đảm bảo chức năng của mỗi gia đình hiện đại, khắc phục những yếu kém của dòng họ là những điều mà mỗi gia đình thành viên của dòng họ phải quan tâm bồi đắp. 
 
@@ -96,11 +96,17 @@ Con cháu họ Nguyễn ta hãy giữ gìn và bảo quản bộ gia phả này 
 
 Lớp hậu duệ thành kính dâng lên tổ tiên lòng tri ân hiếu thảo nguyện mãi xứng đáng là con cháu dòng họ Nguyễn./.
 
-- Phần thứ hai - Phả hệ: Đây là nội dung chính của gia phả, ghi thông tin chi tiết tất cả các thành viên trong dòng họ, theo nguyên tắc đích trước, thứ sau.
-(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả)
+## Phần thứ hai - Phả hệ
 
-- Phần thứ ba - Phả đồ: Trong phần này tên của từng thành viên, từ Cụ Tổ trở xuống đến đời hiện tại của cả dòng họ được trình bày từ trên xuống theo sơ đồ hình cây. Do khuôn khổ của cuốn gia phả không đủ để trình bày toàn bộ tên các thành viên thuộc dòng họ trên cùng một sơ đồ, nên mỗi nhánh lớn của dòng họ kể từ đời thứ 4 sẽ được trình bày trên một sơ đồ riêng.
-(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả)
+Đây là nội dung chính của gia phả, ghi thông tin chi tiết tất cả các thành viên trong dòng họ, theo nguyên tắc đích trước, thứ sau.
+(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả họ Nguyễn)
 
-- Phần thứ tư - Ngày giỗ chạp: Phần này ghi thông tin về ngày chạp của dòng họ, ngày giỗ các bậc tiền nhân và các thành viên khác của dòng họ.
-(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả)
+## Phần thứ ba - Phả đồ
+
+Trong phần này tên của từng thành viên, từ Cụ Tổ trở xuống đến đời hiện tại của cả dòng họ được trình bày từ trên xuống theo sơ đồ hình cây. Do khuôn khổ của cuốn gia phả không đủ để trình bày toàn bộ tên các thành viên thuộc dòng họ trên cùng một sơ đồ, nên mỗi nhánh lớn của dòng họ kể từ đời thứ 4 sẽ được trình bày trên một sơ đồ riêng.
+(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả họ Nguyễn)
+
+## Phần thứ tư - Ngày giỗ chạp
+
+Phần này ghi thông tin về ngày chạp của dòng họ, ngày giỗ các bậc tiền nhân và các thành viên khác của dòng họ.
+(xem trong Gia Phả dòng họ Nguyễn hoặc Phần mềm Quản lý gia phả họ Nguyễn)
