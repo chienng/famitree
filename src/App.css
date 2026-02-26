@@ -1264,6 +1264,42 @@
   min-width: 200px;
 }
 
+/* Intro page: show public/intro.txt in a readable card */
+.intro-page {
+  max-width: 960px;
+  margin: 1.5rem auto 0;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.intro-card {
+  background: #fffbeb;
+  border: 1px solid #facc15;
+  border-radius: 16px;
+  padding: 1.75rem 2rem;
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.08),
+    0 2px 4px rgba(15, 23, 42, 0.06);
+  color: #111827;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
+.intro-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.intro-loading,
+.intro-error {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.intro-error {
+  color: #b91c1c;
+}
+
 .tree-summary-branches {
   width: 100%;
   box-sizing: border-box;

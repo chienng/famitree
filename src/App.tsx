@@ -33,7 +33,7 @@ export default function App() {
   const [showAddForm, setShowAddForm] = useState(false)
   /** When true, selectedPerson was set by double-click to show tree — do not open edit modal. */
   const [hideModalForTreeFocus, setHideModalForTreeFocus] = useState(false)
-  const [view, setView] = useState<'tree' | 'list' | 'users' | 'summary' | 'reminders'>('tree')
+  const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>('intro')
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
   const [newUserUsername, setNewUserUsername] = useState('')
@@ -65,6 +65,8 @@ export default function App() {
   const [treeZoom, setTreeZoom] = useState(1)
   const [treeSize, setTreeSize] = useState<{ w: number; h: number } | null>(null)
   const isAdmin = user.username === 'admin'
+  const [introText, setIntroText] = useState<string | null>(null)
+  const [introError, setIntroError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -86,6 +88,18 @@ export default function App() {
     document.addEventListener('click', close)
     return () => document.removeEventListener('click', close)
   }, [branchDropdownOpen])
+
+  // Lazy-load intro text from public/intro.txt when intro page is first opened
+  useEffect(() => {
+    if (view !== 'intro' || introText !== null || introError !== null) return
+    fetch('/intro.txt')
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status))
+        return res.text()
+      })
+      .then((text) => setIntroText(text))
+      .catch(() => setIntroError('Không thể tải nội dung giới thiệu.'))
+  }, [view, introText, introError])
 
   useEffect(() => {
     if (user?.defaultBranchPersonId) setSelectedBranchId(user.defaultBranchPersonId)
@@ -355,6 +369,12 @@ export default function App() {
         )}
         <nav className="nav">
           <button
+            className={view === 'intro' ? 'active' : ''}
+            onClick={() => setView('intro')}
+          >
+            {t('nav.intro')}
+          </button>
+          <button
             className={view === 'tree' ? 'active' : ''}
             onClick={() => setView('tree')}
           >
@@ -593,6 +613,19 @@ export default function App() {
       </header>
 
       <main className="main">
+        {view === 'intro' && (
+          <section className="intro-page">
+            <div className="intro-card">
+              {introError && <p className="intro-error">{introError}</p>}
+              {!introError && !introText && <p className="intro-loading">{t('intro.loading')}</p>}
+              {introText && (
+                <pre className="intro-text">
+                  {introText}
+                </pre>
+              )}
+            </div>
+          </section>
+        )}
         {view === 'users' && isAdmin && (
           <div className="users-screen">
             <h2 className="users-screen-title">{t('auth.manageUsers')}</h2>
