@@ -485,12 +485,12 @@
 }
 
 .header .btn.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: #1f2937;
   color: #fff;
 }
 
 .header .btn.primary:hover {
-  filter: brightness(1.08);
+  background: #374151;
 }
 
 .search-wrap {
@@ -786,6 +786,12 @@
 
 .users-screen-create-btn {
   margin-left: auto;
+  background: #1f2937;
+  color: #fff;
+}
+
+.users-screen-create-btn:hover {
+  background: #374151;
 }
 
 .users-screen-search-label {
@@ -910,6 +916,34 @@
   overflow-y: auto;
 }
 
+.person-form-panel {
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: min(1440px, calc(100vw - 2rem));
+  margin: 0 auto;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.person-form-panel .person-form {
+  min-height: min(90vh, 1100px);
+}
+
+.person-form .form-title {
+  text-align: left;
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.person-form .section-title {
+  text-align: left;
+}
+
+.person-form .form-actions {
+  justify-content: flex-start;
+}
+
 .modal-content--person-form .person-form {
   margin: 0;
 }
@@ -990,6 +1024,15 @@
 
 .modal-content--form .form-actions {
   margin-top: 1.25rem;
+}
+
+.modal-content--form .form-actions .btn.primary {
+  background: #1f2937;
+  color: #fff;
+}
+
+.modal-content--form .form-actions .btn.primary:hover {
+  background: #374151;
 }
 
 .users-screen-section {
@@ -2186,6 +2229,11 @@ textarea {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1rem 1.25rem;
+}
+
+.rel-actions--disabled {
+  pointer-events: none;
+  opacity: 0.6;
 }
 .rel-inlaw-sublabel {
   font-size: 0.8rem;

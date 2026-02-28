@@ -32,9 +32,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
-  /** When true, selectedPerson was set by double-click to show tree — do not open edit modal. */
-  const [hideModalForTreeFocus, setHideModalForTreeFocus] = useState(false)
-  const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>('intro')
+  /** View to return to when closing/saving the person form page. */
+  const [previousView, setPreviousView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>(() => 'list')
+  const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders' | 'person'>('intro')
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
   const [newUserUsername, setNewUserUsername] = useState('')
@@ -305,15 +305,31 @@ export default function App() {
 
   /** Single click: open edit person form. */
   const handlePersonSelect = (person: Person | null) => {
-    setHideModalForTreeFocus(false)
-    setSelectedPerson(person)
+    if (isAdmin && person) {
+      setPreviousView(view === 'person' ? previousView : view)
+      setView('person')
+      setSelectedPerson(person)
+      setShowAddForm(false)
+    } else {
+      setSelectedPerson(person)
+    }
   }
-  /** Double-click: show tree view focused on that person; do not open edit modal. */
+  /** Double-click: show tree view focused on that person. */
   const handlePersonDoubleClick = (person: Person) => {
     setView('tree')
     setSelectedPerson(person)
     setShowAddForm(false)
-    setHideModalForTreeFocus(true)
+  }
+  const openAddPersonForm = () => {
+    setPreviousView(view === 'person' ? previousView : view)
+    setView('person')
+    setShowAddForm(true)
+    setSelectedPerson(null)
+  }
+  const closePersonForm = () => {
+    setView(previousView)
+    setShowAddForm(false)
+    setSelectedPerson(null)
   }
 
   return (
@@ -363,7 +379,7 @@ export default function App() {
         </div>
         {isAdmin && (
           <div className="actions">
-            <button type="button" className="btn primary" onClick={() => setShowAddForm(true)}>
+            <button type="button" className="btn primary" onClick={openAddPersonForm}>
               {t('actions.addPerson')}
             </button>
           </div>
@@ -920,7 +936,7 @@ export default function App() {
               <div className="empty-state">
                 <p>{t('tree.empty')}</p>
                 {isAdmin && (
-                  <button type="button" className="btn primary" onClick={() => setShowAddForm(true)}>
+                  <button type="button" className="btn primary" onClick={openAddPersonForm}>
                     {t('tree.addFirst')}
                   </button>
                 )}
@@ -1165,7 +1181,7 @@ export default function App() {
               people={filteredPeople}
               searchQuery={trimmedSearch}
               selectedId={selectedPerson?.id}
-              onSelect={setSelectedPerson}
+              onSelect={handlePersonSelect}
             />
           </div>
         )}
@@ -1184,8 +1200,17 @@ export default function App() {
             <RemindersView initialBranchId={user?.defaultBranchPersonId ?? null} />
           </div>
         )}
+        {view === 'person' && isAdmin && (
+          <div className="person-form-panel">
+            <PersonForm
+              person={showAddForm ? undefined : selectedPerson ?? undefined}
+              onClose={closePersonForm}
+              onSaved={closePersonForm}
+            />
+          </div>
+        )}
 
-        {view !== 'users' && view !== 'summary' && view !== 'reminders' && (
+        {view !== 'users' && view !== 'summary' && view !== 'reminders' && view !== 'person' && (
         <aside className="sidebar" ref={sidebarRef}>
           {!isAdmin && selectedPerson && (
             <div className="sidebar-placeholder">
@@ -1205,32 +1230,6 @@ export default function App() {
         </aside>
         )}
 
-        {isAdmin && (showAddForm || (selectedPerson && !hideModalForTreeFocus)) && (
-          <div
-            className="modal-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="person-form-title"
-            onClick={() => {
-              setShowAddForm(false)
-              setSelectedPerson(null)
-            }}
-          >
-            <div className="modal-content modal-content--person-form" onClick={(e) => e.stopPropagation()}>
-              <PersonForm
-                person={showAddForm ? undefined : selectedPerson ?? undefined}
-                onClose={() => {
-                  setShowAddForm(false)
-                  setSelectedPerson(null)
-                }}
-                onSaved={() => {
-                  setShowAddForm(false)
-                  setSelectedPerson(null)
-                }}
-              />
-            </div>
-          </div>
-        )}
       </main>
     </div>
   )
