@@ -327,23 +327,23 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.35rem 0.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.9); /* bright black border */
-  background: rgba(15, 23, 42, 0.9);       /* bright black pill */
-  color: #fef9c3;                          /* light yellow text */
+  border: 1px solid rgba(120, 100, 30, 0.6);
+  background: #a16207;
+  color: #fef9c3;
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .lang-switch-btn:hover {
-  border-color: #fef9c3;
-  background: #020617;
+  background: #ca8a04;
+  border-color: rgba(120, 100, 30, 0.7);
 }
 
 .lang-switch-btn:focus {
   outline: none;
-  border-color: #fef9c3;
-  box-shadow: 0 0 0 2px rgba(254, 249, 195, 0.6);
+  border-color: rgba(254, 249, 195, 0.5);
+  box-shadow: 0 0 0 2px rgba(161, 98, 7, 0.5);
 }
 
 .lang-switch-flag {
