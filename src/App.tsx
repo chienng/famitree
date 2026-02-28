@@ -70,6 +70,8 @@ export default function App() {
   const restoreDbInputRef = useRef<HTMLInputElement>(null)
   const treePanelRef = useRef<HTMLDivElement>(null)
   const treeContentRef = useRef<HTMLDivElement>(null)
+  const searchWrapRef = useRef<HTMLDivElement>(null)
+  const [searchQuickIndex, setSearchQuickIndex] = useState(-1)
   const [treeZoom, setTreeZoom] = useState(1)
   const [treeSize, setTreeSize] = useState<{ w: number; h: number } | null>(null)
   const isAdmin = user.username === 'admin'
@@ -96,6 +98,10 @@ export default function App() {
     document.addEventListener('click', close)
     return () => document.removeEventListener('click', close)
   }, [branchDropdownOpen])
+
+  useEffect(() => {
+    setSearchQuickIndex(-1)
+  }, [searchQuery])
 
   // Lazy-load intro text from public/intro.md when intro page is first opened
   useEffect(() => {
@@ -280,6 +286,21 @@ export default function App() {
       ? listPeopleBase
       : listPeopleBase.filter((p) => p.name.toLowerCase().includes(trimmedSearch))
 
+  const searchQuickMatches =
+    trimmedSearch.length >= 1
+      ? state.people
+          .filter((p) => p.name.trim().toLowerCase().includes(trimmedSearch))
+          .slice(0, 10)
+      : []
+  const openSearchQuick = searchQuickMatches.length > 0 && trimmedSearch.length >= 1
+
+  const handleSearchQuickSelect = (person: Person) => {
+    setSelectedPerson(person)
+    setView('tree')
+    setSearchQuery('')
+    setSearchQuickIndex(-1)
+  }
+
   useLayoutEffect(() => {
     if (view !== 'tree' || !treeContentRef.current || filteredTreeNodes.length === 0) return
     const el = treeContentRef.current
@@ -364,7 +385,7 @@ export default function App() {
         <div className="tagline-center">
           <p className="tagline">{t('app.tagline')}</p>
         </div>
-        <div className="search-wrap">
+        <div className="search-wrap search-wrap--quick" ref={searchWrapRef}>
           <label className="search-label" htmlFor="member-search">
             <span className="search-icon" aria-hidden>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -379,10 +400,53 @@ export default function App() {
               placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (!openSearchQuick) return
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  setSearchQuickIndex((i) => (i < searchQuickMatches.length - 1 ? i + 1 : i))
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setSearchQuickIndex((i) => (i <= 0 ? -1 : i - 1))
+                } else if (e.key === 'Enter') {
+                  const idx = searchQuickIndex >= 0 ? searchQuickIndex : 0
+                  if (searchQuickMatches[idx]) {
+                    e.preventDefault()
+                    handleSearchQuickSelect(searchQuickMatches[idx])
+                  }
+                } else if (e.key === 'Escape') {
+                  setSearchQuickIndex(-1)
+                  setSearchQuery('')
+                }
+              }}
               aria-label={t('search.label')}
+              aria-autocomplete="list"
+              aria-expanded={openSearchQuick}
+              aria-controls="search-quick-list"
               autoComplete="off"
             />
           </label>
+          {openSearchQuick && (
+            <ul
+              id="search-quick-list"
+              className="search-quick-list"
+              role="listbox"
+              aria-label={t('search.quickFindLabel')}
+            >
+              {searchQuickMatches.map((p, i) => (
+                <li key={p.id} role="option" aria-selected={i === searchQuickIndex}>
+                  <button
+                    type="button"
+                    className={`search-quick-item ${i === searchQuickIndex ? 'search-quick-item--active' : ''}`}
+                    onClick={() => handleSearchQuickSelect(p)}
+                    onMouseEnter={() => setSearchQuickIndex(i)}
+                  >
+                    {p.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         {isAdmin && (
           <div className="actions">

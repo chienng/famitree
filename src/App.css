@@ -543,6 +543,46 @@
   border-color: rgba(59, 130, 246, 0.5);
 }
 
+.search-wrap--quick {
+  position: relative;
+}
+
+.search-quick-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.25rem 0 0 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.search-quick-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.search-quick-item:hover,
+.search-quick-item--active {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;
