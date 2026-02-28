@@ -81,7 +81,9 @@ export function getSpouseTitleKey(spouse: Person, index: number): { key: string;
   return index > 1 ? { key: 'treeView.spouseLabel' } : { key: 'treeView.spouseLabel' }
 }
 
-interface TreeViewProps {
+export type TreeLayoutMode = 'traditional' | 'branch'
+
+export interface TreeViewProps {
   nodes: TreeNode[]
   mainPersonIds: Set<string>
   selectedId?: string
@@ -91,16 +93,18 @@ interface TreeViewProps {
   t: TFunction
   /** When set, show these ancestor generations above the tree (focus view). */
   ancestorLevels?: Person[][] | null
+  /** Layout: traditional (ancestors → descendants, horizontal) or branch (vertical + horizontal). */
+  layoutMode?: TreeLayoutMode
 }
 
-export function TreeView({ nodes, mainPersonIds, selectedId, onSelect, onDoubleClick, t, ancestorLevels }: TreeViewProps) {
+export function TreeView({ nodes, mainPersonIds, selectedId, onSelect, onDoubleClick, t, ancestorLevels, layoutMode = 'branch' }: TreeViewProps) {
   const [notesPopover, setNotesPopover] = useState<{
     notes: string
     rect: { left: number; top: number; width: number; height: number }
   } | null>(null)
 
   return (
-    <div className="tree-view">
+    <div className={`tree-view tree-view--${layoutMode}`}>
       {ancestorLevels && ancestorLevels.length > 0 && (
         <div className="tree-ancestors" aria-label={t('treeView.previousGenerations')}>
           <p className="tree-ancestors-title">{t('treeView.previousGenerations')}</p>

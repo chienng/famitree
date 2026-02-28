@@ -35,6 +35,13 @@ export default function App() {
   /** View to return to when closing/saving the person form page. */
   const [previousView, setPreviousView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>(() => 'list')
   const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders' | 'person'>('intro')
+  const [treeLayoutMode, setTreeLayoutMode] = useState<'traditional' | 'branch'>(() => {
+    try {
+      const s = localStorage.getItem('famitree-tree-layout')
+      if (s === 'traditional' || s === 'branch') return s
+    } catch (_) {}
+    return 'branch'
+  })
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
   const [newUserUsername, setNewUserUsername] = useState('')
@@ -1022,6 +1029,28 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  <div className="tree-layout-toggle" role="group" aria-label={t('tree.layoutLabel')}>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'traditional' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('traditional')
+                        try { localStorage.setItem('famitree-tree-layout', 'traditional') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutTraditional')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'branch' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('branch')
+                        try { localStorage.setItem('famitree-tree-layout', 'branch') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutBranch')}
+                    </button>
+                  </div>
                   <div className="tree-zoom-controls">
                     <button
                       type="button"
@@ -1092,6 +1121,7 @@ export default function App() {
                       onDoubleClick={handlePersonDoubleClick}
                       t={t}
                       ancestorLevels={ancestorLevels}
+                      layoutMode={treeLayoutMode}
                     />
                     </div>
                   </div>

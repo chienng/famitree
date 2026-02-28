@@ -1830,21 +1830,12 @@ textarea {
   color: #1e40af;
 }
 
-/* Branch layout: vertical (parent above, children below) + horizontal (siblings/couple in a row) */
+/* Tree container: both layouts use column for roots */
 .tree-view {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-}
-
-.tree-node--horizontal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-wrap: nowrap;
-  margin: 0;
-  gap: 0;
 }
 
 .tree-node {
@@ -1858,8 +1849,17 @@ textarea {
   flex-shrink: 0;
 }
 
-/* Vertical line from couple down to children */
-.tree-node-connector {
+/* ----- Branch layout (nhánh ngang dọc): parent above, vertical connector, children row below ----- */
+.tree-view--branch .tree-node--horizontal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  gap: 0;
+}
+
+.tree-view--branch .tree-node-connector {
   flex-shrink: 0;
   width: 2px;
   min-width: 2px;
@@ -1868,7 +1868,7 @@ textarea {
   margin: 0;
 }
 
-.tree-node-connector::before {
+.tree-view--branch .tree-node-connector::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1880,8 +1880,7 @@ textarea {
   border-radius: 1px;
 }
 
-/* Horizontal row of children below the vertical connector */
-.tree-node--horizontal .tree-children {
+.tree-view--branch .tree-node--horizontal .tree-children {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1897,7 +1896,7 @@ textarea {
   min-height: 72px;
 }
 
-.tree-node--horizontal .tree-children::before {
+.tree-view--branch .tree-node--horizontal .tree-children::before {
   content: '';
   position: absolute;
   top: -2px;
@@ -1909,7 +1908,64 @@ textarea {
   border-radius: 1px;
 }
 
-.tree-node--horizontal .tree-children .tree-node {
+.tree-view--branch .tree-node--horizontal .tree-children .tree-node {
+  margin: 0.35rem 0;
+}
+
+/* ----- Traditional layout (tổ tiên → con cháu): couple left, horizontal connector, children right ----- */
+.tree-view--traditional .tree-node--horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  gap: 0;
+}
+
+.tree-view--traditional .tree-node-connector {
+  flex-shrink: 0;
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: auto;
+  align-self: stretch;
+  position: relative;
+  margin: 0 0.15rem;
+}
+
+.tree-view--traditional .tree-node-connector::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.4) 0%, rgba(148, 163, 184, 0.55) 100%);
+  border-radius: 1px;
+}
+
+.tree-view--traditional .tree-node--horizontal .tree-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1.25rem 1.5rem;
+  margin: 0;
+  padding: 0.85rem 0 0.85rem 1.35rem;
+  border-left: 2px solid rgba(148, 163, 184, 0.45);
+  border-radius: 0 0 0 8px;
+  min-height: 72px;
+  position: relative;
+  background: rgba(248, 250, 252, 0.4);
+  border-top: none;
+}
+
+.tree-view--traditional .tree-node--horizontal .tree-children::before {
+  display: none;
+}
+
+.tree-view--traditional .tree-node--horizontal .tree-children .tree-node {
   margin: 0.35rem 0;
 }
 
@@ -2460,6 +2516,27 @@ textarea {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.tree-layout-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tree-layout-toggle .btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.tree-layout-toggle .btn.active {
+  background: #1f2937;
+  color: #fff;
+  border-color: #1f2937;
+}
+
+.tree-layout-toggle .btn.active:hover {
+  background: #374151;
 }
 
 .tree-zoom-controls {
