@@ -2009,6 +2009,73 @@ textarea {
   margin: 0.35rem 0;
 }
 
+/* ----- Fan layout (hình quạt): parent at top, children in arc below ----- */
+.tree-view--fan .tree-node--horizontal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin: 0;
+  gap: 0;
+}
+
+.tree-view--fan .tree-node-connector {
+  flex-shrink: 0;
+  width: 2px;
+  min-width: 2px;
+  height: 1.25rem;
+  position: relative;
+  margin: 0;
+}
+
+.tree-view--fan .tree-node-connector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin-left: -1px;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.5) 0%, rgba(148, 163, 184, 0.55) 100%);
+  border-radius: 1px;
+}
+
+.tree-view--fan .tree-node--horizontal .tree-children {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 1rem 1.5rem;
+  margin: 0;
+  padding: 1rem 2rem 0.5rem 2rem;
+  min-width: 100%;
+  position: relative;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.08) 0%, rgba(248, 250, 252, 0.6) 100%);
+  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+  border-top: 2px solid rgba(148, 163, 184, 0.4);
+  border-left: 1px solid rgba(148, 163, 184, 0.2);
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  min-height: 80px;
+}
+
+.tree-view--fan .tree-node--horizontal .tree-children::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  margin-left: -1px;
+  width: 2px;
+  height: 0.85rem;
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 1px;
+}
+
+.tree-view--fan .tree-node--horizontal .tree-children .tree-node {
+  margin: 0.35rem 0;
+  flex: 0 1 auto;
+}
+
 .tree-node-card {
   position: relative;
   background: #fffbeb; /* lighter soft yellow, same as person-card */

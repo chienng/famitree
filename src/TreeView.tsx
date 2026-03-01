@@ -81,7 +81,7 @@ export function getSpouseTitleKey(spouse: Person, index: number): { key: string;
   return index > 1 ? { key: 'treeView.spouseLabel' } : { key: 'treeView.spouseLabel' }
 }
 
-export type TreeLayoutMode = 'traditional' | 'branch'
+export type TreeLayoutMode = 'traditional' | 'branch' | 'fan'
 
 export interface TreeViewProps {
   nodes: TreeNode[]
@@ -93,7 +93,7 @@ export interface TreeViewProps {
   t: TFunction
   /** When set, show these ancestor generations above the tree (focus view). */
   ancestorLevels?: Person[][] | null
-  /** Layout: traditional (ancestors → descendants, horizontal) or branch (vertical + horizontal). */
+  /** Layout: traditional (ancestors → descendants), branch (vertical + horizontal), or fan (radial arc). */
   layoutMode?: TreeLayoutMode
 }
 

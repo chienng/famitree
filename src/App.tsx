@@ -35,10 +35,10 @@ export default function App() {
   /** View to return to when closing/saving the person form page. */
   const [previousView, setPreviousView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>(() => 'list')
   const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders' | 'person'>('intro')
-  const [treeLayoutMode, setTreeLayoutMode] = useState<'traditional' | 'branch'>(() => {
+  const [treeLayoutMode, setTreeLayoutMode] = useState<'traditional' | 'branch' | 'fan'>(() => {
     try {
       const s = localStorage.getItem('famitree-tree-layout')
-      if (s === 'traditional' || s === 'branch') return s
+      if (s === 'traditional' || s === 'branch' || s === 'fan') return s
     } catch (_) {}
     return 'branch'
   })
@@ -1113,6 +1113,16 @@ export default function App() {
                       }}
                     >
                       {t('tree.layoutBranch')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'fan' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('fan')
+                        try { localStorage.setItem('famitree-tree-layout', 'fan') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutFan')}
                     </button>
                   </div>
                   <div className="tree-zoom-controls">
