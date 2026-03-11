@@ -14,6 +14,7 @@ import { useLocale } from './LocaleContext'
 import { useAuth } from './AuthContext'
 import { getCurrentAge } from './dateUtils'
 import type { Person } from './types'
+import ReactMarkdown from "react-markdown";
 import './App.css'
 
 export default function App() {
@@ -31,9 +32,16 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
-  /** When true, selectedPerson was set by double-click to show tree — do not open edit modal. */
-  const [hideModalForTreeFocus, setHideModalForTreeFocus] = useState(false)
-  const [view, setView] = useState<'tree' | 'list' | 'users' | 'summary' | 'reminders'>('tree')
+  /** View to return to when closing/saving the person form page. */
+  const [previousView, setPreviousView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders'>(() => 'list')
+  const [view, setView] = useState<'intro' | 'tree' | 'list' | 'users' | 'summary' | 'reminders' | 'person'>('intro')
+  const [treeLayoutMode, setTreeLayoutMode] = useState<'traditional' | 'branch' | 'fan'>(() => {
+    try {
+      const s = localStorage.getItem('famitree-tree-layout')
+      if (s === 'traditional' || s === 'branch' || s === 'fan') return s
+    } catch (_) {}
+    return 'branch'
+  })
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [showUserForm, setShowUserForm] = useState(false)
   const [newUserUsername, setNewUserUsername] = useState('')
@@ -62,9 +70,13 @@ export default function App() {
   const restoreDbInputRef = useRef<HTMLInputElement>(null)
   const treePanelRef = useRef<HTMLDivElement>(null)
   const treeContentRef = useRef<HTMLDivElement>(null)
+  const searchWrapRef = useRef<HTMLDivElement>(null)
+  const [searchQuickIndex, setSearchQuickIndex] = useState(-1)
   const [treeZoom, setTreeZoom] = useState(1)
   const [treeSize, setTreeSize] = useState<{ w: number; h: number } | null>(null)
   const isAdmin = user.username === 'admin'
+  const [introText, setIntroText] = useState<string | null>(null)
+  const [introError, setIntroError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -86,6 +98,22 @@ export default function App() {
     document.addEventListener('click', close)
     return () => document.removeEventListener('click', close)
   }, [branchDropdownOpen])
+
+  useEffect(() => {
+    setSearchQuickIndex(-1)
+  }, [searchQuery])
+
+  // Lazy-load intro text from public/intro.md when intro page is first opened
+  useEffect(() => {
+    if (view !== 'intro' || introText !== null || introError !== null) return
+    fetch('/intro.md')
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status))
+        return res.text()
+      })
+      .then((text) => setIntroText(text))
+      .catch(() => setIntroError('Không thể tải nội dung giới thiệu.'))
+  }, [view, introText, introError])
 
   useEffect(() => {
     if (user?.defaultBranchPersonId) setSelectedBranchId(user.defaultBranchPersonId)
@@ -258,6 +286,21 @@ export default function App() {
       ? listPeopleBase
       : listPeopleBase.filter((p) => p.name.toLowerCase().includes(trimmedSearch))
 
+  const searchQuickMatches =
+    trimmedSearch.length >= 1
+      ? state.people
+          .filter((p) => p.name.trim().toLowerCase().includes(trimmedSearch))
+          .slice(0, 10)
+      : []
+  const openSearchQuick = searchQuickMatches.length > 0 && trimmedSearch.length >= 1
+
+  const handleSearchQuickSelect = (person: Person) => {
+    setSelectedPerson(person)
+    setView('tree')
+    setSearchQuery('')
+    setSearchQuickIndex(-1)
+  }
+
   useLayoutEffect(() => {
     if (view !== 'tree' || !treeContentRef.current || filteredTreeNodes.length === 0) return
     const el = treeContentRef.current
@@ -290,15 +333,31 @@ export default function App() {
 
   /** Single click: open edit person form. */
   const handlePersonSelect = (person: Person | null) => {
-    setHideModalForTreeFocus(false)
-    setSelectedPerson(person)
+    if (isAdmin && person) {
+      setPreviousView(view === 'person' ? previousView : view)
+      setView('person')
+      setSelectedPerson(person)
+      setShowAddForm(false)
+    } else {
+      setSelectedPerson(person)
+    }
   }
-  /** Double-click: show tree view focused on that person; do not open edit modal. */
+  /** Double-click: show tree view focused on that person. */
   const handlePersonDoubleClick = (person: Person) => {
     setView('tree')
     setSelectedPerson(person)
     setShowAddForm(false)
-    setHideModalForTreeFocus(true)
+  }
+  const openAddPersonForm = () => {
+    setPreviousView(view === 'person' ? previousView : view)
+    setView('person')
+    setShowAddForm(true)
+    setSelectedPerson(null)
+  }
+  const closePersonForm = () => {
+    setView(previousView)
+    setShowAddForm(false)
+    setSelectedPerson(null)
   }
 
   return (
@@ -326,7 +385,7 @@ export default function App() {
         <div className="tagline-center">
           <p className="tagline">{t('app.tagline')}</p>
         </div>
-        <div className="search-wrap">
+        <div className="search-wrap search-wrap--quick" ref={searchWrapRef}>
           <label className="search-label" htmlFor="member-search">
             <span className="search-icon" aria-hidden>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -341,19 +400,68 @@ export default function App() {
               placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (!openSearchQuick) return
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  setSearchQuickIndex((i) => (i < searchQuickMatches.length - 1 ? i + 1 : i))
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setSearchQuickIndex((i) => (i <= 0 ? -1 : i - 1))
+                } else if (e.key === 'Enter') {
+                  const idx = searchQuickIndex >= 0 ? searchQuickIndex : 0
+                  if (searchQuickMatches[idx]) {
+                    e.preventDefault()
+                    handleSearchQuickSelect(searchQuickMatches[idx])
+                  }
+                } else if (e.key === 'Escape') {
+                  setSearchQuickIndex(-1)
+                  setSearchQuery('')
+                }
+              }}
               aria-label={t('search.label')}
+              aria-autocomplete="list"
+              aria-expanded={openSearchQuick}
+              aria-controls="search-quick-list"
               autoComplete="off"
             />
           </label>
+          {openSearchQuick && (
+            <ul
+              id="search-quick-list"
+              className="search-quick-list"
+              role="listbox"
+              aria-label={t('search.quickFindLabel')}
+            >
+              {searchQuickMatches.map((p, i) => (
+                <li key={p.id} role="option" aria-selected={i === searchQuickIndex}>
+                  <button
+                    type="button"
+                    className={`search-quick-item ${i === searchQuickIndex ? 'search-quick-item--active' : ''}`}
+                    onClick={() => handleSearchQuickSelect(p)}
+                    onMouseEnter={() => setSearchQuickIndex(i)}
+                  >
+                    {p.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         {isAdmin && (
           <div className="actions">
-            <button type="button" className="btn primary" onClick={() => setShowAddForm(true)}>
+            <button type="button" className="btn primary" onClick={openAddPersonForm}>
               {t('actions.addPerson')}
             </button>
           </div>
         )}
         <nav className="nav">
+          <button
+            className={view === 'intro' ? 'active' : ''}
+            onClick={() => setView('intro')}
+          >
+            {t('nav.intro')}
+          </button>
           <button
             className={view === 'tree' ? 'active' : ''}
             onClick={() => setView('tree')}
@@ -593,6 +701,19 @@ export default function App() {
       </header>
 
       <main className="main">
+        {view === 'intro' && (
+          <section className="intro-page">
+            <div className="intro-card">
+              {introError && <p className="intro-error">{introError}</p>}
+              {!introError && !introText && <p className="intro-loading">{t('intro.loading')}</p>}
+              {introText && (
+                <ReactMarkdown>
+                  {introText}
+                </ReactMarkdown>
+              )}
+            </div>
+          </section>
+        )}
         {view === 'users' && isAdmin && (
           <div className="users-screen">
             <h2 className="users-screen-title">{t('auth.manageUsers')}</h2>
@@ -886,7 +1007,7 @@ export default function App() {
               <div className="empty-state">
                 <p>{t('tree.empty')}</p>
                 {isAdmin && (
-                  <button type="button" className="btn primary" onClick={() => setShowAddForm(true)}>
+                  <button type="button" className="btn primary" onClick={openAddPersonForm}>
                     {t('tree.addFirst')}
                   </button>
                 )}
@@ -972,6 +1093,38 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  <div className="tree-layout-toggle" role="group" aria-label={t('tree.layoutLabel')}>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'traditional' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('traditional')
+                        try { localStorage.setItem('famitree-tree-layout', 'traditional') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutTraditional')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'branch' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('branch')
+                        try { localStorage.setItem('famitree-tree-layout', 'branch') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutBranch')}
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${treeLayoutMode === 'fan' ? 'active' : ''}`}
+                      onClick={() => {
+                        setTreeLayoutMode('fan')
+                        try { localStorage.setItem('famitree-tree-layout', 'fan') } catch (_) {}
+                      }}
+                    >
+                      {t('tree.layoutFan')}
+                    </button>
+                  </div>
                   <div className="tree-zoom-controls">
                     <button
                       type="button"
@@ -1042,6 +1195,7 @@ export default function App() {
                       onDoubleClick={handlePersonDoubleClick}
                       t={t}
                       ancestorLevels={ancestorLevels}
+                      layoutMode={treeLayoutMode}
                     />
                     </div>
                   </div>
@@ -1131,7 +1285,7 @@ export default function App() {
               people={filteredPeople}
               searchQuery={trimmedSearch}
               selectedId={selectedPerson?.id}
-              onSelect={setSelectedPerson}
+              onSelect={handlePersonSelect}
             />
           </div>
         )}
@@ -1150,8 +1304,17 @@ export default function App() {
             <RemindersView initialBranchId={user?.defaultBranchPersonId ?? null} />
           </div>
         )}
+        {view === 'person' && isAdmin && (
+          <div className="person-form-panel">
+            <PersonForm
+              person={showAddForm ? undefined : selectedPerson ?? undefined}
+              onClose={closePersonForm}
+              onSaved={closePersonForm}
+            />
+          </div>
+        )}
 
-        {view !== 'users' && view !== 'summary' && view !== 'reminders' && (
+        {view !== 'users' && view !== 'summary' && view !== 'reminders' && view !== 'person' && (
         <aside className="sidebar" ref={sidebarRef}>
           {!isAdmin && selectedPerson && (
             <div className="sidebar-placeholder">
@@ -1171,32 +1334,6 @@ export default function App() {
         </aside>
         )}
 
-        {isAdmin && (showAddForm || (selectedPerson && !hideModalForTreeFocus)) && (
-          <div
-            className="modal-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="person-form-title"
-            onClick={() => {
-              setShowAddForm(false)
-              setSelectedPerson(null)
-            }}
-          >
-            <div className="modal-content modal-content--person-form" onClick={(e) => e.stopPropagation()}>
-              <PersonForm
-                person={showAddForm ? undefined : selectedPerson ?? undefined}
-                onClose={() => {
-                  setShowAddForm(false)
-                  setSelectedPerson(null)
-                }}
-                onSaved={() => {
-                  setShowAddForm(false)
-                  setSelectedPerson(null)
-                }}
-              />
-            </div>
-          </div>
-        )}
       </main>
     </div>
   )

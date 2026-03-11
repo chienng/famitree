@@ -382,10 +382,12 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
         </div>
       </form>
 
-      {!isNew && person && (
-        <>
-          <p className="section-title">{t('form.relationships')}</p>
-          <div className="rel-current">
+      <p className="section-title">{t('form.relationships')}</p>
+      <div className="rel-current">
+        {isNew ? (
+          <p className="rel-none">{t('form.saveFirstToAddRelationships')}</p>
+        ) : person ? (
+          <>
             {getParentRelationships(person.id).map(({ id, person: p, type }) => (
               <div key={id} className="rel-item">
                 <span className="rel-label">{parentRelLabel(type)}</span>
@@ -428,16 +430,18 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
               getSpouseRelationships(person.id).length === 0 && (
                 <p className="rel-none">{t('form.noRelationships')}</p>
               )}
-          </div>
-          <div className="rel-actions">
-            {others.length > 0 && (
+          </>
+        ) : null}
+      </div>
+      <div className={`rel-actions ${isNew ? 'rel-actions--disabled' : ''}`}>
+        {(isNew || (person && others.length > 0)) && (
               <>
                 <div className="rel-actions-row">
                   <div className="rel-actions-col">
                     <label>{t('form.addParent')}</label>
                     <SearchablePersonSelect
-                      id="add-parent-select"
-                      options={others.filter((o) => !parentIds.includes(o.id))}
+                      id={isNew ? 'add-parent-select-new' : 'add-parent-select'}
+                      options={isNew ? [] : others.filter((o) => !parentIds.includes(o.id))}
                       value={addParentId}
                       onChange={setAddParentId}
                       placeholder={t('form.selectPerson')}
@@ -449,7 +453,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addParent}
-                      disabled={!addParentId}
+                      disabled={isNew || !addParentId}
                     >
                       {t('form.addAsParent')}
                     </button>
@@ -457,8 +461,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addSpouse')}</label>
                     <SearchablePersonSelect
-                      id="add-spouse-select"
-                      options={others.filter((o) => !spouseIds.includes(o.id))}
+                      id={isNew ? 'add-spouse-select-new' : 'add-spouse-select'}
+                      options={isNew ? [] : others.filter((o) => !spouseIds.includes(o.id))}
                       value={addSpouseId}
                       onChange={setAddSpouseId}
                       placeholder={t('form.selectPerson')}
@@ -470,7 +474,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addSpouseRel}
-                      disabled={!addSpouseId}
+                      disabled={isNew || !addSpouseId}
                     >
                       {t('form.addAsSpouse')}
                     </button>
@@ -478,8 +482,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addChild')}</label>
                     <SearchablePersonSelect
-                      id="add-child-select"
-                      options={others.filter((o) => !childIds.includes(o.id))}
+                      id={isNew ? 'add-child-select-new' : 'add-child-select'}
+                      options={isNew ? [] : others.filter((o) => !childIds.includes(o.id))}
                       value={addChildId}
                       onChange={setAddChildId}
                       placeholder={t('form.selectPerson')}
@@ -491,7 +495,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addChild}
-                      disabled={!addChildId}
+                      disabled={isNew || !addChildId}
                     >
                       {t('form.addAsChild')}
                     </button>
@@ -499,8 +503,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addParentInLaw')}</label>
                     <SearchablePersonSelect
-                      id="add-parent-inlaw-select"
-                      options={others.filter((o) => !parentIds.includes(o.id))}
+                      id={isNew ? 'add-parent-inlaw-select-new' : 'add-parent-inlaw-select'}
+                      options={isNew ? [] : others.filter((o) => !parentIds.includes(o.id))}
                       value={addParentInLawId}
                       onChange={setAddParentInLawId}
                       placeholder={t('form.selectPerson')}
@@ -512,7 +516,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addParentInLaw}
-                      disabled={!addParentInLawId}
+                      disabled={isNew || !addParentInLawId}
                     >
                       {t('form.addAsParentInLaw')}
                     </button>
@@ -520,8 +524,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addChildInLaw')}</label>
                     <SearchablePersonSelect
-                      id="add-child-inlaw-select"
-                      options={others.filter((o) => !childIds.includes(o.id))}
+                      id={isNew ? 'add-child-inlaw-select-new' : 'add-child-inlaw-select'}
+                      options={isNew ? [] : others.filter((o) => !childIds.includes(o.id))}
                       value={addChildInLawId}
                       onChange={setAddChildInLawId}
                       placeholder={t('form.selectPerson')}
@@ -533,7 +537,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addChildInLaw}
-                      disabled={!addChildInLawId}
+                      disabled={isNew || !addChildInLawId}
                     >
                       {t('form.addAsChildInLaw')}
                     </button>
@@ -541,8 +545,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addParentAdopt')}</label>
                     <SearchablePersonSelect
-                      id="add-parent-adopt-select"
-                      options={others.filter((o) => !parentIds.includes(o.id))}
+                      id={isNew ? 'add-parent-adopt-select-new' : 'add-parent-adopt-select'}
+                      options={isNew ? [] : others.filter((o) => !parentIds.includes(o.id))}
                       value={addParentAdoptId}
                       onChange={setAddParentAdoptId}
                       placeholder={t('form.selectPerson')}
@@ -554,7 +558,7 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addParentAdopt}
-                      disabled={!addParentAdoptId}
+                      disabled={isNew || !addParentAdoptId}
                     >
                       {t('form.addAsParentAdopt')}
                     </button>
@@ -562,8 +566,8 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                   <div className="rel-actions-col">
                     <label>{t('form.addChildAdopt')}</label>
                     <SearchablePersonSelect
-                      id="add-child-adopt-select"
-                      options={others.filter((o) => !childIds.includes(o.id))}
+                      id={isNew ? 'add-child-adopt-select-new' : 'add-child-adopt-select'}
+                      options={isNew ? [] : others.filter((o) => !childIds.includes(o.id))}
                       value={addChildAdoptId}
                       onChange={setAddChildAdoptId}
                       placeholder={t('form.selectPerson')}
@@ -575,17 +579,15 @@ export function PersonForm({ person, onClose, onSaved }: PersonFormProps) {
                       type="button"
                       className="btn secondary"
                       onClick={addChildAdopt}
-                      disabled={!addChildAdoptId}
+                      disabled={isNew || !addChildAdoptId}
                     >
                       {t('form.addAsChildAdopt')}
                     </button>
                   </div>
                 </div>
               </>
-            )}
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }
